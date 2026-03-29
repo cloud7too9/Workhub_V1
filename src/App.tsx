@@ -2,23 +2,17 @@ import { useState } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Topbar } from './components/layout/Topbar';
 import { Drawer } from './components/layout/Drawer';
+import { getPageTitle } from './data/navigation';
 import { Handbuch } from './pages/Handbuch';
 import { Rechner } from './pages/Rechner';
 import { Auftraege } from './pages/Auftraege';
 import { Einstellungen } from './pages/Einstellungen';
 
-const pageTitles: Record<string, { title: string; subtitle?: string }> = {
-  '/': { title: 'Werkstoff-Handbuch', subtitle: 'offline, klickbar' },
-  '/rechner': { title: 'Rechner', subtitle: 'Stückzahl + Restlänge' },
-  '/auftraege': { title: 'Aufträge', subtitle: 'Verwaltung' },
-  '/einstellungen': { title: 'Einstellungen' },
-};
-
 export function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const location = useLocation();
 
-  const current = pageTitles[location.pathname] ?? { title: 'WorkHub' };
+  const current = getPageTitle(location.pathname);
 
   return (
     <div

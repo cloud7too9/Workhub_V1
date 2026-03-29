@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { RechnerCard as RechnerCardType, Operation } from '../types/rechner';
-import { loadCards, saveCards, loadOperations, saveOperations } from '../stores/useRechnerStore';
+import { loadCards, saveCards, loadOperations, saveOperations } from '../stores/rechnerStorage';
 import { tokens } from '../styles/tokens';
 import { RechnerCard } from '../components/rechner/RechnerCard';
 import { SettingsDrawer } from '../components/rechner/SettingsDrawer';

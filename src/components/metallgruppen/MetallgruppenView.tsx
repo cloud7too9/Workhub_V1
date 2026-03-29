@@ -15,7 +15,7 @@ import {
   deleteMaterial,
   loadChangelog,
   saveChangelog,
-} from '../../stores/useMaterialStore';
+} from '../../stores/materialStorage';
 
 type FormState =
   | { mode: 'closed' }
@@ -35,16 +35,22 @@ export function MetallgruppenView() {
   const [deleteState, setDeleteState] = useState<DeleteState>({ mode: 'closed' });
 
   useEffect(() => {
-    initMaterials().then(setMaterials);
-    setChangelog(loadChangelog());
+    initMaterials().then((mats) => {
+      setMaterials(mats);
+      setChangelog(loadChangelog());
+      setInitialized(true);
+    });
   }, []);
 
+  // Track if we've loaded once to avoid saving initial empty state
+  const [initialized, setInitialized] = useState(false);
+
   useEffect(() => {
-    if (materials.length > 0) saveMaterials(materials);
-  }, [materials]);
+    if (initialized) saveMaterials(materials);
+  }, [materials, initialized]);
   useEffect(() => {
-    saveChangelog(changelog);
-  }, [changelog]);
+    if (initialized) saveChangelog(changelog);
+  }, [changelog, initialized]);
 
   const getMaterials = (groupId: string) =>
     materials.filter((m) => m.groupId === groupId);

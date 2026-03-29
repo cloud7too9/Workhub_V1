@@ -1,18 +1,8 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { tokens } from '../../styles/tokens';
+import { getSidebarItems } from '../../data/navigation';
 
-interface NavItem {
-  label: string;
-  group: string;
-  path: string;
-}
-
-const navItems: NavItem[] = [
-  { label: 'Handbuch', group: 'Werkstoffe', path: '/' },
-  { label: 'Rechner', group: 'Tools', path: '/rechner' },
-  { label: 'Aufträge', group: 'Verwaltung', path: '/auftraege' },
-  { label: 'Einstellungen', group: 'System', path: '/einstellungen' },
-];
+const navItems = getSidebarItems();
 
 interface DrawerProps {
   open: boolean;

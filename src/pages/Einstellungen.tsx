@@ -12,9 +12,9 @@ import {
   saveChangelog,
   undoEntry,
   resetToFactory,
-} from '../stores/useMaterialStore';
-import { loadSettings, saveSettings } from '../stores/useSettingsStore';
-import type { AppSettings } from '../stores/useSettingsStore';
+} from '../stores/materialStorage';
+import { loadSettings, saveSettings } from '../stores/settingsStorage';
+import type { AppSettings } from '../stores/settingsStorage';
 
 type Section = 'changelog' | 'notifications';
 

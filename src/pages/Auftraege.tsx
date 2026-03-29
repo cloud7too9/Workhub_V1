@@ -16,7 +16,7 @@ import {
   deleteOrder,
   advanceOrderStatus,
   applyOrderView,
-} from '../stores/useOrderStore';
+} from '../stores/orderStorage';
 
 type FormState =
   | { mode: 'closed' }

@@ -21,29 +21,119 @@ export const DEFAULT_OPERATIONS: Operation[] = [
 ];
 
 /**
- * Safely evaluate a math expression with variable substitution.
- * Supports: floor, ceil, round, abs, sqrt, min, max
+ * Safe math expression evaluator — no eval() or new Function().
+ * Supports: +, -, *, /, parentheses, floor, ceil, round, abs, sqrt, min, max
  */
 export function safeEval(expr: string, vars: Record<string, number>): number {
-  try {
-    let e = expr.trim();
-    // Replace variable names (longest first to avoid partial replace)
-    const sorted = Object.keys(vars).sort((a, b) => b.length - a.length);
-    for (const k of sorted) {
-      e = e.replaceAll(k, `(${vars[k]})`);
+  const mathFns: Record<string, (...args: number[]) => number> = {
+    floor: Math.floor,
+    ceil: Math.ceil,
+    round: Math.round,
+    abs: Math.abs,
+    sqrt: Math.sqrt,
+    min: Math.min,
+    max: Math.max,
+  };
+
+  let pos = 0;
+  // Substitute variables into tokens
+  let input = expr.trim();
+  const sortedKeys = Object.keys(vars).sort((a, b) => b.length - a.length);
+  for (const k of sortedKeys) {
+    input = input.replaceAll(k, `(${vars[k]})`);
+  }
+  const src = input;
+
+  function peek(): string {
+    while (pos < src.length && src[pos] === ' ') pos++;
+    return pos < src.length ? src[pos]! : '';
+  }
+
+  function consume(ch: string): void {
+    if (peek() !== ch) throw new Error(`Expected '${ch}'`);
+    pos++;
+  }
+
+  function parseNumber(): number {
+    while (pos < src.length && src[pos] === ' ') pos++;
+    let start = pos;
+    if (pos < src.length && (src[pos] === '-' || src[pos] === '+')) pos++;
+    while (pos < src.length && (src[pos]! >= '0' && src[pos]! <= '9' || src[pos] === '.')) pos++;
+    const num = parseFloat(src.slice(start, pos));
+    if (isNaN(num)) throw new Error('Invalid number');
+    return num;
+  }
+
+  function parseIdent(): string {
+    while (pos < src.length && src[pos] === ' ') pos++;
+    let start = pos;
+    while (pos < src.length && /[a-zA-Z_]/.test(src[pos]!)) pos++;
+    return src.slice(start, pos);
+  }
+
+  function parsePrimary(): number {
+    while (pos < src.length && src[pos] === ' ') pos++;
+
+    // Check for function call
+    const saved = pos;
+    if (/[a-zA-Z]/.test(src[pos] ?? '')) {
+      const name = parseIdent();
+      if (peek() === '(' && mathFns[name]) {
+        consume('(');
+        const args: number[] = [parseExpr()];
+        while (peek() === ',') {
+          consume(',');
+          args.push(parseExpr());
+        }
+        consume(')');
+        return mathFns[name]!(...args);
+      }
+      // Not a function, backtrack
+      pos = saved;
     }
-    // Replace math functions
-    e = e.replace(/floor\(/g, 'Math.floor(');
-    e = e.replace(/ceil\(/g, 'Math.ceil(');
-    e = e.replace(/round\(/g, 'Math.round(');
-    e = e.replace(/abs\(/g, 'Math.abs(');
-    e = e.replace(/sqrt\(/g, 'Math.sqrt(');
-    e = e.replace(/min\(/g, 'Math.min(');
-    e = e.replace(/max\(/g, 'Math.max(');
-    // Safety check — only allow safe characters
-    if (/[^0-9+\-*/().,%\s Math.floorceiundsqtabmxp]/.test(e)) return NaN;
-    // eslint-disable-next-line no-new-func
-    return new Function(`"use strict"; return (${e})`)() as number;
+
+    // Parenthesized expression
+    if (peek() === '(') {
+      consume('(');
+      const val = parseExpr();
+      consume(')');
+      return val;
+    }
+
+    // Unary minus
+    if (peek() === '-') {
+      pos++;
+      return -parsePrimary();
+    }
+
+    return parseNumber();
+  }
+
+  function parseTerm(): number {
+    let left = parsePrimary();
+    while (peek() === '*' || peek() === '/') {
+      const op = peek();
+      pos++;
+      const right = parsePrimary();
+      left = op === '*' ? left * right : left / right;
+    }
+    return left;
+  }
+
+  function parseExpr(): number {
+    let left = parseTerm();
+    while (peek() === '+' || peek() === '-') {
+      const op = peek();
+      pos++;
+      const right = parseTerm();
+      left = op === '+' ? left + right : left - right;
+    }
+    return left;
+  }
+
+  try {
+    const result = parseExpr();
+    return isFinite(result) ? result : NaN;
   } catch {
     return NaN;
   }
