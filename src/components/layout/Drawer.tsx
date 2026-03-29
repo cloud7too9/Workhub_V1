@@ -11,7 +11,6 @@ const navItems: NavItem[] = [
   { label: 'Handbuch', group: 'Werkstoffe', path: '/' },
   { label: 'Rechner', group: 'Tools', path: '/rechner' },
   { label: 'Aufträge', group: 'Verwaltung', path: '/auftraege' },
-  { label: 'Metallgruppen', group: 'Werkstoffe', path: '/metallgruppen' },
   { label: 'Einstellungen', group: 'System', path: '/einstellungen' },
 ];
 

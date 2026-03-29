@@ -5,14 +5,12 @@ import { Drawer } from './components/layout/Drawer';
 import { Handbuch } from './pages/Handbuch';
 import { Rechner } from './pages/Rechner';
 import { Auftraege } from './pages/Auftraege';
-import { Metallgruppen } from './pages/Metallgruppen';
 import { Einstellungen } from './pages/Einstellungen';
 
 const pageTitles: Record<string, { title: string; subtitle?: string }> = {
   '/': { title: 'Werkstoff-Handbuch', subtitle: 'offline, klickbar' },
   '/rechner': { title: 'Rechner', subtitle: 'Stückzahl + Restlänge' },
   '/auftraege': { title: 'Aufträge', subtitle: 'Verwaltung' },
-  '/metallgruppen': { title: 'Metallgruppen', subtitle: 'Übersicht' },
   '/einstellungen': { title: 'Einstellungen' },
 };
 
@@ -42,7 +40,6 @@ export function App() {
           <Route path="/" element={<Handbuch />} />
           <Route path="/rechner" element={<Rechner />} />
           <Route path="/auftraege" element={<Auftraege />} />
-          <Route path="/metallgruppen" element={<Metallgruppen />} />
           <Route path="/einstellungen" element={<Einstellungen />} />
         </Routes>
       </main>
