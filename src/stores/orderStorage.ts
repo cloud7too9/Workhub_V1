@@ -1,6 +1,15 @@
-import type { Order, OrderHistoryEntry, OrderStatusFilter, OrderSortMode } from '../types/orders';
+import type {
+  Order,
+  OrderHistoryEntry,
+  OrderStatusFilter,
+  OrderSortMode,
+  ExtractedFieldKey,
+  ExtractedField,
+  SelectionRect,
+  SourceImage,
+} from '../types/orders';
 import { emptyOrderImages, emptyExtractedFields } from '../types/orders';
-import { getNextStatus, getNextStep } from '../data/orderStatus';
+import { getNextStatus } from '../data/orderStatus';
 
 const STOR_ORDERS = 'workhub_orders';
 const STOR_HISTORY = 'workhub_order_history';
@@ -16,9 +25,11 @@ function now() {
 
 // ── Persistence ──
 
+/** Lade Aufträge — migriert alte Daten automatisch */
 export function loadOrders(): Order[] {
   try {
-    return JSON.parse(localStorage.getItem(STOR_ORDERS) ?? '[]') as Order[];
+    const raw = JSON.parse(localStorage.getItem(STOR_ORDERS) ?? '[]') as Record<string, unknown>[];
+    return raw.map(migrateOrder);
   } catch {
     return [];
   }
@@ -40,6 +51,34 @@ export function saveOrderHistory(entries: OrderHistoryEntry[]): void {
   localStorage.setItem(STOR_HISTORY, JSON.stringify(entries));
 }
 
+// ── Migration ──
+
+/** Migriert alte Auftragsformate auf das neue Modell */
+function migrateOrder(raw: Record<string, unknown>): Order {
+  // Status-Migration: alte Werte → neue vereinfachte Werte
+  let status = (raw.status as string) ?? 'open';
+  if (status === 'sawn' || status === 'machining_done') status = 'in_progress';
+  if (status === 'ready_for_shipping') status = 'done';
+  if (!['open', 'in_progress', 'done'].includes(status)) status = 'open';
+
+  return {
+    id: (raw.id as string) ?? uid(),
+    article: (raw.article as string) ?? '',
+    orderNumber: (raw.orderNumber as string) ?? '',
+    customer: (raw.customer as string) ?? '',
+    material: (raw.material as string) ?? '',
+    dimensions: (raw.dimensions as string) ?? '',
+    quantity: (raw.quantity as number) ?? 0,
+    deliveryDate: (raw.deliveryDate as string) ?? '',
+    notes: (raw.notes as string) ?? '',
+    images: (raw.images as Order['images']) ?? emptyOrderImages(),
+    extracted: (raw.extracted as Order['extracted']) ?? emptyExtractedFields(),
+    status: status as Order['status'],
+    createdAt: (raw.createdAt as string) ?? now(),
+    updatedAt: (raw.updatedAt as string) ?? now(),
+  };
+}
+
 // ── CRUD ──
 
 export interface CreateOrderInput {
@@ -53,29 +92,28 @@ export interface CreateOrderInput {
   notes?: string;
 }
 
-export function createOrder(orders: Order[], input: CreateOrderInput): {
-  orders: Order[];
-  order: Order;
-  historyEntry: OrderHistoryEntry;
-} {
+/** Manuell einen Auftrag erstellen (bestehendes Formular) */
+export function createOrder(
+  orders: Order[],
+  input: CreateOrderInput,
+): { orders: Order[]; order: Order; historyEntry: OrderHistoryEntry } {
   const ts = now();
   const order: Order = {
-      id: uid(),
-      article: input.article.trim(),
-      orderNumber: input.orderNumber?.trim() ?? '',
-      customer: input.customer?.trim() ?? '',
-      material: input.material.trim(),
-      dimensions: input.dimensions.trim(),
-      quantity: input.quantity,
-      deliveryDate: input.deliveryDate,
-      notes: input.notes?.trim() ?? '',
-      images: emptyOrderImages(),
-      extracted: emptyExtractedFields(),
-      status: 'open',
-      currentStep: 'sawing',
-      createdAt: ts,
-      updatedAt: ts,
-    };
+    id: uid(),
+    article: input.article.trim(),
+    orderNumber: input.orderNumber?.trim() ?? '',
+    customer: input.customer?.trim() ?? '',
+    material: input.material.trim(),
+    dimensions: input.dimensions.trim(),
+    quantity: input.quantity,
+    deliveryDate: input.deliveryDate,
+    notes: input.notes?.trim() ?? '',
+    images: emptyOrderImages(),
+    extracted: emptyExtractedFields(),
+    status: 'open',
+    createdAt: ts,
+    updatedAt: ts,
+  };
 
   const historyEntry: OrderHistoryEntry = {
     id: uid(),
@@ -86,13 +124,48 @@ export function createOrder(orders: Order[], input: CreateOrderInput): {
     newValue: order.article,
   };
 
-  return {
-    orders: [...orders, order],
-    order,
-    historyEntry,
-  };
+  return { orders: [...orders, order], order, historyEntry };
 }
 
+/** Phase 3: Auftrag direkt aus Zeichnungsscan starten */
+export function createOrderFromScan(
+  orders: Order[],
+  drawingImageData: string,
+): { orders: Order[]; order: Order; historyEntry: OrderHistoryEntry } {
+  const ts = now();
+  const order: Order = {
+    id: uid(),
+    article: '',
+    orderNumber: '',
+    customer: '',
+    material: '',
+    dimensions: '',
+    quantity: 0,
+    deliveryDate: '',
+    notes: '',
+    images: {
+      drawingImage: drawingImageData,
+      jobSheetImage: null,
+    },
+    extracted: emptyExtractedFields(),
+    status: 'open',
+    createdAt: ts,
+    updatedAt: ts,
+  };
+
+  const historyEntry: OrderHistoryEntry = {
+    id: uid(),
+    orderId: order.id,
+    timestamp: ts,
+    action: 'Auftrag aus Scan erstellt',
+    oldValue: '',
+    newValue: 'Zeichnung',
+  };
+
+  return { orders: [...orders, order], order, historyEntry };
+}
+
+/** Auftrag bearbeiten */
 export function updateOrder(
   orders: Order[],
   id: string,
@@ -124,12 +197,10 @@ export function updateOrder(
     newValue: updated.article,
   };
 
-  return {
-    orders: orders.map((o) => (o.id === id ? updated : o)),
-    historyEntry,
-  };
+  return { orders: orders.map((o) => (o.id === id ? updated : o)), historyEntry };
 }
 
+/** Auftrag löschen */
 export function deleteOrder(
   orders: Order[],
   id: string,
@@ -142,16 +213,14 @@ export function deleteOrder(
     orderId: id,
     timestamp: now(),
     action: 'Auftrag gelöscht',
-    oldValue: existing.article,
+    oldValue: existing.article || 'Scan-Auftrag',
     newValue: '',
   };
 
-  return {
-    orders: orders.filter((o) => o.id !== id),
-    historyEntry,
-  };
+  return { orders: orders.filter((o) => o.id !== id), historyEntry };
 }
 
+/** Status weiterschalten: open → in_progress → done */
 export function advanceOrderStatus(
   orders: Order[],
   id: string,
@@ -162,13 +231,10 @@ export function advanceOrderStatus(
   const nextStatus = getNextStatus(existing.status);
   if (!nextStatus) return null;
 
-  const nextStep = getNextStep(existing.status);
   const ts = now();
-
   const updated: Order = {
     ...existing,
     status: nextStatus,
-    currentStep: nextStep,
     updatedAt: ts,
   };
 
@@ -181,10 +247,95 @@ export function advanceOrderStatus(
     newValue: nextStatus,
   };
 
-  return {
-    orders: orders.map((o) => (o.id === id ? updated : o)),
-    historyEntry,
-  };
+  return { orders: orders.map((o) => (o.id === id ? updated : o)), historyEntry };
+}
+
+// ── Extracted Field Operations (Phase 4–6) ──
+
+/** Markierung für ein Feld setzen (Phase 5) */
+export function setFieldSelection(
+  orders: Order[],
+  orderId: string,
+  fieldKey: ExtractedFieldKey,
+  rect: SelectionRect,
+  source: SourceImage,
+): Order[] {
+  return orders.map((o) => {
+    if (o.id !== orderId) return o;
+    const existing = o.extracted[fieldKey];
+    const updated: ExtractedField = {
+      rawText: existing?.rawText ?? '',
+      value: existing?.value ?? '',
+      confirmed: false,
+      sourceImage: source,
+      selectionRect: rect,
+    };
+    return {
+      ...o,
+      extracted: { ...o.extracted, [fieldKey]: updated },
+      updatedAt: now(),
+    };
+  });
+}
+
+/** Erkannten Rohtext setzen (Phase 6) */
+export function setFieldRawText(
+  orders: Order[],
+  orderId: string,
+  fieldKey: ExtractedFieldKey,
+  rawText: string,
+): Order[] {
+  return orders.map((o) => {
+    if (o.id !== orderId) return o;
+    const existing = o.extracted[fieldKey];
+    if (!existing) return o;
+    return {
+      ...o,
+      extracted: {
+        ...o.extracted,
+        [fieldKey]: { ...existing, rawText, confirmed: false },
+      },
+      updatedAt: now(),
+    };
+  });
+}
+
+/** Feldwert bestätigen (Phase 6) */
+export function confirmFieldValue(
+  orders: Order[],
+  orderId: string,
+  fieldKey: ExtractedFieldKey,
+  value: string,
+): Order[] {
+  return orders.map((o) => {
+    if (o.id !== orderId) return o;
+    const existing = o.extracted[fieldKey];
+    if (!existing) return o;
+    return {
+      ...o,
+      extracted: {
+        ...o.extracted,
+        [fieldKey]: { ...existing, value, confirmed: true },
+      },
+      updatedAt: now(),
+    };
+  });
+}
+
+/** Zeichnungsbild setzen */
+export function setDrawingImage(
+  orders: Order[],
+  orderId: string,
+  imageData: string,
+): Order[] {
+  return orders.map((o) => {
+    if (o.id !== orderId) return o;
+    return {
+      ...o,
+      images: { ...o.images, drawingImage: imageData },
+      updatedAt: now(),
+    };
+  });
 }
 
 // ── Filtering & Sorting ──

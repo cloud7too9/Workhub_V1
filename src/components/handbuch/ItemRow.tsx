@@ -2,7 +2,7 @@ import type { Material, MetalGroup, SawParams } from '../../types/materials';
 import { tokens } from '../../styles/tokens';
 import { Pill } from '../shared/Pill';
 
-function formatVcShort(vc: SawParams['schnittgeschwindigkeit_ms']): string {
+function formatVcShort(vc: SawParams['schnittgeschwindigkeit_ms'] | undefined): string {
   if (vc == null) return '—';
   if (typeof vc === 'object') {
     return `${vc.durchmesser_gt_10}/${vc.durchmesser_lt_10} m/s`;

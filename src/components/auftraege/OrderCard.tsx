@@ -1,60 +1,113 @@
-import { useState } from 'react';
 import type { Order } from '../../types/orders';
 import { tokens } from '../../styles/tokens';
 import { OrderStatusBadge } from './OrderStatusBadge';
-import {
-  isOrderAdvanceable,
-  getAdvanceButtonLabel,
-  orderStepLabels,
-  orderStatusColors,
-} from '../../data/orderStatus';
+import { orderStatusColors } from '../../data/orderStatus';
+import { sawRelevantFields, extractedFieldLabels } from '../../types/orders';
 
 interface OrderCardProps {
   order: Order;
-  onAdvance: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  onOpen: () => void;
 }
 
-export function OrderCard({ order, onAdvance, onEdit, onDelete }: OrderCardProps) {
-  const [expanded, setExpanded] = useState(false);
-
-  const advanceLabel = getAdvanceButtonLabel(order.status);
-  const canAdvance = isOrderAdvanceable(order.status);
+export function OrderCard({ order, onOpen }: OrderCardProps) {
   const statusColor = orderStatusColors[order.status];
+  const hasDrawing = !!order.images.drawingImage;
 
-  const deliveryDate = new Date(order.deliveryDate);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const daysUntil = Math.ceil((deliveryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  const isUrgent = daysUntil <= 3 && order.status !== 'ready_for_shipping';
+  // Säge-relevante bestätigte Felder für Fortschrittsanzeige
+
+  // Anzeige-Titel
+  const displayTitle =
+    order.extracted.article?.value || order.article || 'Scan-Auftrag';
+
+  // Lieferdatum-Logik
+  const hasDelivery = !!order.deliveryDate;
+  let daysUntil = 0;
+  let isUrgent = false;
+  if (hasDelivery) {
+    const deliveryDate = new Date(order.deliveryDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    daysUntil = Math.ceil(
+      (deliveryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+    );
+    isUrgent = daysUntil <= 3 && order.status !== 'done';
+  }
+
+  // Kompakte Säge-Info-Zeile
+  const sawPreview: string[] = [];
+  const matVal = order.extracted.material?.value || order.material;
+  if (matVal) sawPreview.push(matVal);
+  const sawVal = order.extracted.sawMeasure?.value;
+  if (sawVal) sawPreview.push(sawVal);
+  const qtyVal = order.extracted.quantity?.value || (order.quantity > 0 ? `${order.quantity}` : '');
+  if (qtyVal) sawPreview.push(`${qtyVal} Stk`);
 
   return (
     <div
+      onClick={onOpen}
       style={{
-        border: `1px solid ${expanded ? statusColor + '50' : tokens.border}`,
+        border: `1px solid ${tokens.border}`,
         borderRadius: 16,
         background: tokens.surface,
         overflow: 'hidden',
-        transition: 'border-color 0.2s ease',
+        cursor: 'pointer',
+        transition: 'border-color 0.2s ease, transform 0.1s ease',
+        borderLeft: `3px solid ${statusColor}`,
       }}
     >
-      {/* Main Row */}
       <div
-        onClick={() => setExpanded(!expanded)}
         style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '14px 14px',
-          cursor: 'pointer',
-          gap: 10,
+          padding: '14px',
+          gap: 12,
         }}
       >
+        {/* Zeichnungs-Thumbnail */}
+        {hasDrawing && (
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 10,
+              overflow: 'hidden',
+              flexShrink: 0,
+              border: `1px solid ${tokens.border}`,
+            }}
+          >
+            <img
+              src={order.images.drawingImage!}
+              alt=""
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+          </div>
+        )}
+
+        {/* Content */}
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: tokens.text }}>
-              {order.article}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              marginBottom: 4,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: tokens.text,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {displayTitle}
             </span>
             <OrderStatusBadge status={order.status} />
             {isUrgent && (
@@ -73,22 +126,64 @@ export function OrderCard({ order, onAdvance, onEdit, onDelete }: OrderCardProps
               </span>
             )}
           </div>
-          <div style={{ fontSize: 12, color: tokens.muted, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <span>{order.material}</span>
-            <span>·</span>
-            <span>{order.dimensions}</span>
-            <span>·</span>
-            <span>{order.quantity} Stk</span>
-            <span>·</span>
-            <span>
-              {new Date(order.deliveryDate).toLocaleDateString('de-DE', {
-                day: '2-digit',
-                month: '2-digit',
-              })}
-            </span>
+
+          {/* Säge-Preview */}
+          <div
+            style={{
+              fontSize: 12,
+              color: tokens.muted,
+              display: 'flex',
+              gap: 6,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+            }}
+          >
+            {sawPreview.length > 0 ? (
+              sawPreview.map((s, i) => (
+                <span key={i}>
+                  {i > 0 && <span style={{ marginRight: 6 }}>·</span>}
+                  {s}
+                </span>
+              ))
+            ) : (
+              <span style={{ fontStyle: 'italic' }}>Felder noch leer</span>
+            )}
+          </div>
+
+          {/* Feld-Fortschritt */}
+          <div
+            style={{
+              display: 'flex',
+              gap: 3,
+              marginTop: 6,
+            }}
+          >
+            {sawRelevantFields.map((key) => {
+              const field = order.extracted[key];
+              const filled = !!field?.value;
+              const confirmed = !!field?.confirmed;
+              return (
+                <div
+                  key={key}
+                  title={extractedFieldLabels[key]}
+                  style={{
+                    width: 18,
+                    height: 4,
+                    borderRadius: 2,
+                    background: confirmed
+                      ? tokens.success
+                      : filled
+                        ? tokens.warning
+                        : `${tokens.muted}30`,
+                    transition: 'background 0.2s ease',
+                  }}
+                />
+              );
+            })}
           </div>
         </div>
 
+        {/* Chevron */}
         <svg
           width="16"
           height="16"
@@ -96,128 +191,11 @@ export function OrderCard({ order, onAdvance, onEdit, onDelete }: OrderCardProps
           fill="none"
           stroke={tokens.muted}
           strokeWidth="2"
-          style={{
-            transition: 'transform 0.2s ease',
-            transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-            flexShrink: 0,
-          }}
+          style={{ flexShrink: 0 }}
         >
-          <polyline points="6 9 12 15 18 9" />
+          <polyline points="9 18 15 12 9 6" />
         </svg>
       </div>
-
-      {/* Expanded Details */}
-      {expanded && (
-        <div
-          style={{
-            padding: '0 14px 14px',
-            borderTop: `1px solid ${tokens.border}`,
-            animation: 'fadeSlideDown 0.2s ease',
-          }}
-        >
-          {/* Detail rows */}
-          <div style={{ display: 'grid', gap: 8, padding: '12px 0' }}>
-            {order.customer && (
-              <DetailRow label="Kunde" value={order.customer} />
-            )}
-            {order.orderNumber && (
-              <DetailRow label="Bestellnr." value={order.orderNumber} />
-            )}
-            <DetailRow
-              label="Lieferdatum"
-              value={new Date(order.deliveryDate).toLocaleDateString('de-DE')}
-            />
-            {order.currentStep && (
-              <DetailRow
-                label="Nächster Schritt"
-                value={orderStepLabels[order.currentStep]}
-              />
-            )}
-            {order.notes && (
-              <DetailRow label="Notizen" value={order.notes} />
-            )}
-            <DetailRow
-              label="Erstellt"
-              value={new Date(order.createdAt).toLocaleString('de-DE')}
-            />
-          </div>
-
-          {/* Actions */}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {canAdvance && advanceLabel && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAdvance();
-                }}
-                style={{
-                  height: 40,
-                  padding: '0 16px',
-                  borderRadius: 10,
-                  border: 'none',
-                  background: statusColor,
-                  color: '#0b0d10',
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  fontFamily: tokens.font.ui,
-                }}
-              >
-                {advanceLabel}
-              </button>
-            )}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-              style={{
-                height: 40,
-                padding: '0 14px',
-                borderRadius: 10,
-                border: `1px solid ${tokens.border}`,
-                background: 'transparent',
-                color: tokens.accent,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: tokens.font.ui,
-              }}
-            >
-              ✎ Bearbeiten
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              style={{
-                height: 40,
-                padding: '0 14px',
-                borderRadius: 10,
-                border: `1px solid ${tokens.danger}40`,
-                background: `${tokens.danger}18`,
-                color: tokens.danger,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: tokens.font.ui,
-              }}
-            >
-              Löschen
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ display: 'flex', gap: 10, fontSize: 13 }}>
-      <span style={{ color: tokens.muted, minWidth: 100 }}>{label}</span>
-      <span style={{ color: tokens.text, fontWeight: 500 }}>{value}</span>
     </div>
   );
 }

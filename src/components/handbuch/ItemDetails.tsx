@@ -3,7 +3,7 @@ import { tokens } from '../../styles/tokens';
 import { Pill } from '../shared/Pill';
 import { KvRow } from '../shared/KvRow';
 
-function formatVc(vc: SawParams['schnittgeschwindigkeit_ms']): string {
+function formatVc(vc: SawParams['schnittgeschwindigkeit_ms'] | undefined): string {
   if (vc == null) return '—';
   if (typeof vc === 'object') {
     const gt = vc.durchmesser_gt_10 ?? '—';

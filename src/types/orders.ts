@@ -35,15 +35,44 @@ export interface ExtractedField {
   selectionRect: SelectionRect | null;
 }
 
+/** Schlüssel aller extrahierbaren Felder */
+export type ExtractedFieldKey =
+  | 'article'
+  | 'material'
+  | 'quantity'
+  | 'sawMeasure'
+  | 'overmeasure'
+  | 'sawInstruction'
+  | 'diameterOrRawSize';
+
 /** Alle extrahierbaren Felder eines Auftrags */
-export interface ExtractedFields {
-  material: ExtractedField | null;
-  dimensions: ExtractedField | null;
-  sawMeasure: ExtractedField | null;
-  overmeasure: ExtractedField | null;
-  sawInstruction: ExtractedField | null;
-  diameterOrRawSize: ExtractedField | null;
-}
+export type ExtractedFields = Record<ExtractedFieldKey, ExtractedField | null>;
+
+/** Lesbare deutsche Labels für ExtractedFieldKeys */
+export const extractedFieldLabels: Record<ExtractedFieldKey, string> = {
+  article: 'Artikel',
+  material: 'Werkstoff',
+  quantity: 'Stückzahl',
+  sawMeasure: 'Sägemaß',
+  overmeasure: 'Aufmaß',
+  sawInstruction: 'Sägeanweisung',
+  diameterOrRawSize: 'Rohmaß / Ø',
+};
+
+/** Säge-relevante Felder (Phase 7 Priorisierung) */
+export const sawRelevantFields: ExtractedFieldKey[] = [
+  'sawMeasure',
+  'overmeasure',
+  'sawInstruction',
+  'material',
+  'diameterOrRawSize',
+  'quantity',
+];
+
+/** Allgemeine Felder (nachrangig in Phase 7) */
+export const generalFields: ExtractedFieldKey[] = [
+  'article',
+];
 
 // ── Factory-Funktionen ──
 
@@ -59,8 +88,9 @@ export function emptyExtractedField(): ExtractedField {
 
 export function emptyExtractedFields(): ExtractedFields {
   return {
+    article: null,
     material: null,
-    dimensions: null,
+    quantity: null,
     sawMeasure: null,
     overmeasure: null,
     sawInstruction: null,
@@ -75,21 +105,9 @@ export function emptyOrderImages(): OrderImages {
   };
 }
 
-// ── Status & Workflow ──
+// ── Status & Workflow (Phase 8: vereinfacht) ──
 
-export type OrderStatus =
-  | 'open'
-  | 'sawn'
-  | 'machining_done'
-  | 'ready_for_shipping';
-
-export type OrderStep =
-  | 'sawing'
-  | 'machining'
-  | 'packing'
-  | null;
-
-// ── Auftrag ──
+export type OrderStatus = 'open' | 'in_progress' | 'done';
 
 export interface Order {
   id: string;
@@ -104,13 +122,12 @@ export interface Order {
   deliveryDate: string;
   notes: string;
 
-  // Scan-Erweiterung (Phase 2)
+  // Scan-Erweiterung (Phase 2+)
   images: OrderImages;
   extracted: ExtractedFields;
 
-  // Workflow
+  // Workflow (Phase 8: vereinfacht)
   status: OrderStatus;
-  currentStep: OrderStep;
   createdAt: string;
   updatedAt: string;
 }
