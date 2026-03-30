@@ -1,4 +1,5 @@
 import type { Order, OrderHistoryEntry, OrderStatusFilter, OrderSortMode } from '../types/orders';
+import { emptyOrderImages, emptyExtractedFields } from '../types/orders';
 import { getNextStatus, getNextStep } from '../data/orderStatus';
 
 const STOR_ORDERS = 'workhub_orders';
@@ -59,20 +60,22 @@ export function createOrder(orders: Order[], input: CreateOrderInput): {
 } {
   const ts = now();
   const order: Order = {
-    id: uid(),
-    article: input.article.trim(),
-    orderNumber: input.orderNumber?.trim() ?? '',
-    customer: input.customer?.trim() ?? '',
-    material: input.material.trim(),
-    dimensions: input.dimensions.trim(),
-    quantity: input.quantity,
-    deliveryDate: input.deliveryDate,
-    notes: input.notes?.trim() ?? '',
-    status: 'open',
-    currentStep: 'sawing',
-    createdAt: ts,
-    updatedAt: ts,
-  };
+      id: uid(),
+      article: input.article.trim(),
+      orderNumber: input.orderNumber?.trim() ?? '',
+      customer: input.customer?.trim() ?? '',
+      material: input.material.trim(),
+      dimensions: input.dimensions.trim(),
+      quantity: input.quantity,
+      deliveryDate: input.deliveryDate,
+      notes: input.notes?.trim() ?? '',
+      images: emptyOrderImages(),
+      extracted: emptyExtractedFields(),
+      status: 'open',
+      currentStep: 'sawing',
+      createdAt: ts,
+      updatedAt: ts,
+    };
 
   const historyEntry: OrderHistoryEntry = {
     id: uid(),
