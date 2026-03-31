@@ -1,11 +1,16 @@
 import { useState } from 'react';
 import type { Order } from '../../types/orders';
+import type { ImportSource } from '../../types/import';
 import { tokens } from '../../styles/tokens';
 import { Backdrop, CenterPanel } from '../shared/Overlay';
+import { ImportPreview } from '../import/ImportPreview';
 
 interface OrderFormProps {
   mode: 'create' | 'edit';
   initial?: Partial<Order>;
+  /** Pending import source (shown as preview in create mode) */
+  importPreview?: ImportSource | null;
+  onRemoveImport?: () => void;
   onSave: (data: {
     article: string;
     material: string;
@@ -61,7 +66,7 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
 };
 
-export function OrderForm({ mode, initial, onSave, onCancel }: OrderFormProps) {
+export function OrderForm({ mode, initial, importPreview, onRemoveImport, onSave, onCancel }: OrderFormProps) {
   const [article, setArticle] = useState(initial?.article ?? '');
   const [material, setMaterial] = useState(initial?.material ?? '');
   const [dimensions, setDimensions] = useState(initial?.dimensions ?? '');
@@ -110,7 +115,9 @@ export function OrderForm({ mode, initial, onSave, onCancel }: OrderFormProps) {
           }}
         >
           <span style={{ fontSize: 16, fontWeight: 700, color: tokens.text }}>
-            {mode === 'create' ? 'Neuer Auftrag' : 'Auftrag bearbeiten'}
+            {mode === 'create'
+              ? importPreview ? 'Auftrag aus Import' : 'Neuer Auftrag'
+              : 'Auftrag bearbeiten'}
           </span>
           <button
             onClick={onCancel}
@@ -130,6 +137,13 @@ export function OrderForm({ mode, initial, onSave, onCancel }: OrderFormProps) {
             ✕
           </button>
         </div>
+
+        {/* Import preview */}
+        {importPreview && onRemoveImport && (
+          <div style={{ marginBottom: 12 }}>
+            <ImportPreview source={importPreview} onRemove={onRemoveImport} />
+          </div>
+        )}
 
         <div style={{ display: 'grid', gap: 12 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>

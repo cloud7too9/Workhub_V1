@@ -1,4 +1,4 @@
-import type { Order, OrderHistoryEntry, OrderStatusFilter, OrderSortMode } from '../types/orders';
+import type { Order, OrderHistoryEntry, OrderStatusFilter, OrderSortMode, OrderImportMeta } from '../types/orders';
 import { getNextStatus, getNextStep } from '../data/orderStatus';
 import { uid as _uid } from '../utils/uid';
 
@@ -50,6 +50,7 @@ export interface CreateOrderInput {
   orderNumber?: string;
   customer?: string;
   notes?: string;
+  importMeta?: OrderImportMeta;
 }
 
 export function createOrder(orders: Order[], input: CreateOrderInput): {
@@ -72,6 +73,7 @@ export function createOrder(orders: Order[], input: CreateOrderInput): {
     currentStep: 'sawing',
     createdAt: ts,
     updatedAt: ts,
+    ...(input.importMeta ? { importMeta: input.importMeta } : {}),
   };
 
   const historyEntry: OrderHistoryEntry = {

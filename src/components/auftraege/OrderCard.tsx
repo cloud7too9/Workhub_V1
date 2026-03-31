@@ -57,6 +57,29 @@ export function OrderCard({ order, onAdvance, onEdit, onDelete }: OrderCardProps
               {order.article}
             </span>
             <OrderStatusBadge status={order.status} />
+            {order.importMeta && (
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  color: tokens.accent,
+                  background: tokens.accentDim,
+                  border: `1px solid ${tokens.accent}30`,
+                  padding: '2px 6px',
+                  borderRadius: 5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 3,
+                }}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                {order.importMeta.sourceKind === 'camera' ? 'Foto' : order.importMeta.sourceKind === 'gallery' ? 'Galerie' : 'Datei'}
+              </span>
+            )}
             {isUrgent && (
               <span
                 style={{
@@ -135,6 +158,12 @@ export function OrderCard({ order, onAdvance, onEdit, onDelete }: OrderCardProps
             )}
             {order.notes && (
               <DetailRow label="Notizen" value={order.notes} />
+            )}
+            {order.importMeta && (
+              <DetailRow
+                label="Import"
+                value={`${order.importMeta.fileName} (${order.importMeta.sourceKind === 'camera' ? 'Foto' : order.importMeta.sourceKind === 'gallery' ? 'Galerie' : 'Datei'})`}
+              />
             )}
             <DetailRow
               label="Erstellt"

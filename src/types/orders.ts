@@ -1,3 +1,5 @@
+import type { ImportSourceKind } from './import';
+
 export type OrderStatus =
   | 'open'
   | 'sawn'
@@ -9,6 +11,15 @@ export type OrderStep =
   | 'machining'
   | 'packing'
   | null;
+
+/** Persisted import metadata (previewUrl is session-only, not stored) */
+export interface OrderImportMeta {
+  sourceKind: ImportSourceKind;
+  mimeType: string;
+  fileName: string;
+  fileSize: number;
+  importedAt: string;
+}
 
 export interface Order {
   id: string;
@@ -24,6 +35,8 @@ export interface Order {
   currentStep: OrderStep;
   createdAt: string;
   updatedAt: string;
+  /** Attached drawing/document import (optional) */
+  importMeta?: OrderImportMeta;
 }
 
 export interface OrderHistoryEntry {
