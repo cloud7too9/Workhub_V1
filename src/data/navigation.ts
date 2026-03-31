@@ -8,7 +8,8 @@ export interface NavRoute {
 }
 
 export const routes: NavRoute[] = [
-  { path: '/', label: 'Handbuch', group: 'Werkstoffe', title: 'Werkstoff-Handbuch', subtitle: 'offline, klickbar', showInSidebar: true },
+  { path: '/', label: 'Startbereich', group: '', title: 'WorkHub', showInSidebar: true },
+  { path: '/handbuch', label: 'Handbuch', group: 'Werkstoffe', title: 'Werkstoff-Handbuch', subtitle: 'offline, klickbar', showInSidebar: true },
   { path: '/rechner', label: 'Rechner', group: 'Tools', title: 'Rechner', subtitle: 'Stückzahl + Restlänge', showInSidebar: true },
   { path: '/auftraege', label: 'Aufträge', group: 'Verwaltung', title: 'Aufträge', subtitle: 'Verwaltung', showInSidebar: true },
   { path: '/einstellungen', label: 'Einstellungen', group: 'System', title: 'Einstellungen', showInSidebar: true },
