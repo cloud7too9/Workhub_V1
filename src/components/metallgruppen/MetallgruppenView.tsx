@@ -33,6 +33,7 @@ export function MetallgruppenView() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [formState, setFormState] = useState<FormState>({ mode: 'closed' });
   const [deleteState, setDeleteState] = useState<DeleteState>({ mode: 'closed' });
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     initMaterials().then((mats) => {
@@ -41,9 +42,6 @@ export function MetallgruppenView() {
       setInitialized(true);
     });
   }, []);
-
-  // Track if we've loaded once to avoid saving initial empty state
-  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     if (initialized) saveMaterials(materials);
@@ -61,10 +59,10 @@ export function MetallgruppenView() {
 
     return metalGroups.filter((g) => {
       if (g.name.toLowerCase().includes(q)) return true;
-      const mats = getMaterials(g.id);
-      return mats.some((m) => m.name.toLowerCase().includes(q));
+      return materials
+        .filter((m) => m.groupId === g.id)
+        .some((m) => m.name.toLowerCase().includes(q));
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, materials]);
 
   const handleAdd = (name: string, notes: string) => {

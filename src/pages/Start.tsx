@@ -1,70 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { tokens } from '../styles/tokens';
-import { routes } from '../data/navigation';
+import { getStartNavItems } from '../data/navigation';
+import type { NavRoute } from '../data/navigation';
 
-/* ── Icon-Map (SVG inline, kein extra Paket nötig) ── */
-const ICONS: Record<string, JSX.Element> = {
-  '/handbuch': (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
-      <path d="M4 4.5A2.5 2.5 0 016.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15z" />
-      <path d="M8 7h8M8 11h6" />
-    </svg>
-  ),
-  '/rechner': (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="2" width="16" height="20" rx="2" />
-      <line x1="8" y1="6" x2="16" y2="6" />
-      <line x1="8" y1="10" x2="10" y2="10" />
-      <line x1="12" y1="10" x2="14" y2="10" />
-      <line x1="8" y1="14" x2="10" y2="14" />
-      <line x1="12" y1="14" x2="14" y2="14" />
-      <line x1="8" y1="18" x2="14" y2="18" />
-    </svg>
-  ),
-  '/auftraege': (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-      <rect x="9" y="3" width="6" height="4" rx="1" />
-      <path d="M9 14l2 2 4-4" />
-    </svg>
-  ),
-  '/einstellungen': (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1.08 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001.08 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1.08z" />
-    </svg>
-  ),
-};
-
-/* Fallback-Icon */
-const DEFAULT_ICON = (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 8v4l3 3" />
-  </svg>
-);
-
-/* ── Einzelne NavCard ── */
-function NavCard({
-  path,
-  label,
-  group,
-  index,
-}: {
-  path: string;
-  label: string;
-  group: string;
-  index: number;
-}) {
+function NavCard({ route, index }: { route: NavRoute; index: number }) {
   const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
-  const icon = ICONS[path] ?? DEFAULT_ICON;
 
   return (
     <button
-      onClick={() => navigate(path)}
+      onClick={() => navigate(route.path)}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onFocus={() => setHovered(true)}
@@ -90,7 +36,7 @@ function NavCard({
         animation: `startCardIn 0.45s cubic-bezier(0.16,1,0.3,1) ${index * 70}ms both`,
       }}
     >
-      {/* Icon */}
+      {/* Icon from navigation config */}
       <div
         style={{
           width: 44,
@@ -106,10 +52,9 @@ function NavCard({
           boxShadow: hovered ? `0 0 16px ${tokens.accentDim}` : 'none',
         }}
       >
-        {icon}
+        {route.icon}
       </div>
 
-      {/* Text */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
         <span
           style={{
@@ -120,16 +65,10 @@ function NavCard({
             transition: 'color 0.25s ease',
           }}
         >
-          {label}
+          {route.label}
         </span>
-        <span
-          style={{
-            fontFamily: tokens.font.mono,
-            fontSize: 11,
-            color: tokens.muted,
-          }}
-        >
-          {group}
+        <span style={{ fontFamily: tokens.font.mono, fontSize: 11, color: tokens.muted }}>
+          {route.group}
         </span>
       </div>
 
@@ -143,16 +82,7 @@ function NavCard({
           flexShrink: 0,
         }}
       >
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="9 18 15 12 9 6" />
         </svg>
       </div>
@@ -160,10 +90,8 @@ function NavCard({
   );
 }
 
-/* ── Start-Seite ── */
 export function Start() {
-  /* Nur sichtbare Sidebar-Einträge, ohne die Start-Route selbst */
-  const navItems = routes.filter((r) => r.showInSidebar && r.path !== '/');
+  const navItems = getStartNavItems();
 
   return (
     <div
@@ -188,14 +116,12 @@ export function Start() {
           transform: 'translateX(-50%)',
           width: 460,
           height: 360,
-          background:
-            'radial-gradient(ellipse at center, rgba(0,229,255,0.06) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse at center, rgba(0,229,255,0.06) 0%, transparent 70%)',
           pointerEvents: 'none',
           animation: 'startGlow 6s ease-in-out infinite',
         }}
       />
 
-      {/* Content wrapper */}
       <div
         style={{
           width: '100%',
@@ -207,7 +133,6 @@ export function Start() {
           zIndex: 1,
         }}
       >
-        {/* Heading */}
         <h1
           style={{
             margin: 0,
@@ -227,13 +152,11 @@ export function Start() {
           WorkHub
         </h1>
 
-        {/* Tagline */}
         <p
           style={{
             margin: '8px 0 0',
             fontFamily: tokens.font.mono,
             fontSize: 11,
-            fontWeight: 400,
             color: tokens.muted,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
@@ -243,7 +166,6 @@ export function Start() {
           Werkstatt-Management
         </p>
 
-        {/* Divider */}
         <div
           style={{
             width: 40,
@@ -254,27 +176,12 @@ export function Start() {
           }}
         />
 
-        {/* Nav cards */}
-        <div
-          style={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
-          }}
-        >
-          {navItems.map((item, i) => (
-            <NavCard
-              key={item.path}
-              path={item.path}
-              label={item.label}
-              group={item.group}
-              index={i}
-            />
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {navItems.map((route, i) => (
+            <NavCard key={route.path} route={route} index={i} />
           ))}
         </div>
 
-        {/* Footer */}
         <div
           style={{
             marginTop: 44,
@@ -294,7 +201,6 @@ export function Start() {
         </div>
       </div>
 
-      {/* Keyframes */}
       <style>{`
         @keyframes startFadeIn {
           from { opacity: 0; transform: translateY(14px); }

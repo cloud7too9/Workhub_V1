@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { tokens } from '../../styles/tokens';
 import { getSidebarItems } from '../../data/navigation';
+import { Backdrop, SideDrawer, OverlayHeader } from '../shared/Overlay';
 
 interface DrawerProps {
   open: boolean;
@@ -19,78 +20,11 @@ export function Drawer({ open, onClose }: DrawerProps) {
 
   return (
     <>
-      {/* Backdrop */}
-      {open && (
-        <div
-          onClick={onClose}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 90,
-            background: 'rgba(0,0,0,0.6)',
-            animation: 'fadeIn 0.2s ease',
-          }}
-        />
-      )}
+      {open && <Backdrop onClick={onClose} />}
 
-      {/* Drawer Panel */}
-      <aside
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          bottom: 0,
-          zIndex: 100,
-          width: 280,
-          background: tokens.surface,
-          borderRight: `1px solid ${tokens.border}`,
-          transform: open ? 'translateX(0)' : 'translateX(-100%)',
-          transition: 'transform 0.25s ease',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        {/* Drawer Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '16px 20px',
-            borderBottom: `1px solid ${tokens.border}`,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 16,
-              fontWeight: 600,
-              color: tokens.text,
-            }}
-          >
-            Navigation
-          </span>
-          <button
-            onClick={onClose}
-            aria-label="Navigation schließen"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 36,
-              height: 36,
-              background: 'none',
-              border: 'none',
-              color: tokens.muted,
-              fontSize: 18,
-              cursor: 'pointer',
-              borderRadius: tokens.radius.sm,
-            }}
-          >
-            ✕
-          </button>
-        </div>
+      <SideDrawer open={open} side="left" width={280}>
+        <OverlayHeader title="Navigation" onClose={onClose} />
 
-        {/* Nav Items */}
         <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto' }}>
           <ul style={{ listStyle: 'none' }}>
             {navItems.map((item) => {
@@ -102,8 +36,8 @@ export function Drawer({ open, onClose }: DrawerProps) {
                     style={{
                       width: '100%',
                       display: 'flex',
-                      flexDirection: 'column',
-                      gap: 2,
+                      alignItems: 'center',
+                      gap: 12,
                       padding: '14px 20px',
                       minHeight: tokens.touch.minHeight,
                       background: isActive ? tokens.accentDim : 'transparent',
@@ -118,22 +52,35 @@ export function Drawer({ open, onClose }: DrawerProps) {
                   >
                     <span
                       style={{
-                        fontSize: 15,
-                        fontWeight: isActive ? 600 : 400,
-                        color: isActive ? tokens.accent : tokens.text,
+                        color: isActive ? tokens.accent : tokens.muted,
+                        display: 'flex',
+                        flexShrink: 0,
                       }}
                     >
-                      {item.label}
+                      {item.icon}
                     </span>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        color: tokens.muted,
-                        fontFamily: tokens.font.mono,
-                      }}
-                    >
-                      {item.group}
-                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span
+                        style={{
+                          fontSize: 15,
+                          fontWeight: isActive ? 600 : 400,
+                          color: isActive ? tokens.accent : tokens.text,
+                        }}
+                      >
+                        {item.label}
+                      </span>
+                      {item.group && (
+                        <span
+                          style={{
+                            fontSize: 11,
+                            color: tokens.muted,
+                            fontFamily: tokens.font.mono,
+                          }}
+                        >
+                          {item.group}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 </li>
               );
@@ -141,7 +88,6 @@ export function Drawer({ open, onClose }: DrawerProps) {
           </ul>
         </nav>
 
-        {/* Footer */}
         <div
           style={{
             padding: '16px 20px',
@@ -153,7 +99,7 @@ export function Drawer({ open, onClose }: DrawerProps) {
         >
           WorkHub v1.0
         </div>
-      </aside>
+      </SideDrawer>
     </>
   );
 }

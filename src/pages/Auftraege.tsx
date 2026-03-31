@@ -28,18 +28,13 @@ type DeleteState =
   | { mode: 'confirm'; order: Order };
 
 export function Auftraege() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [history, setHistory] = useState<OrderHistoryEntry[]>([]);
+  const [orders, setOrders] = useState<Order[]>(() => loadOrders());
+  const [history, setHistory] = useState<OrderHistoryEntry[]>(() => loadOrderHistory());
   const [statusFilter, setStatusFilter] = useState<OrderStatusFilter>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortMode, setSortMode] = useState<OrderSortMode>('deliveryDateAsc');
   const [formState, setFormState] = useState<FormState>({ mode: 'closed' });
   const [deleteState, setDeleteState] = useState<DeleteState>({ mode: 'closed' });
-
-  useEffect(() => {
-    setOrders(loadOrders());
-    setHistory(loadOrderHistory());
-  }, []);
 
   useEffect(() => {
     saveOrders(orders);

@@ -21,15 +21,10 @@ type Section = 'changelog' | 'notifications';
 
 export function Einstellungen() {
   const [activeSection, setActiveSection] = useState<Section>('changelog');
-  const [changelog, setChangelog] = useState<ChangelogEntry[]>([]);
-  const [materials, setMaterials] = useState<Material[]>([]);
+  const [changelog, setChangelog] = useState<ChangelogEntry[]>(() => loadChangelog());
+  const [materials, setMaterials] = useState<Material[]>(() => loadMaterials());
   const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
   const [showReset, setShowReset] = useState(false);
-
-  useEffect(() => {
-    setChangelog(loadChangelog());
-    setMaterials(loadMaterials());
-  }, []);
 
   useEffect(() => {
     saveSettings(settings);

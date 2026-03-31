@@ -31,6 +31,19 @@ export function Rechner() {
     ]);
   }, [operations]);
 
+  // When operations change, reset any cards whose operation was deleted
+  const handleOpsChange = useCallback((newOps: Operation[]) => {
+    setOperations(newOps);
+    const validIds = new Set(newOps.map((o) => o.id));
+    setCards((prev) =>
+      prev.map((c) =>
+        c.operationId && !validIds.has(c.operationId)
+          ? { ...c, operationId: '', inputs: {} }
+          : c,
+      ),
+    );
+  }, []);
+
   const updateCard = useCallback((updated: RechnerCardType) => {
     setCards((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
   }, []);
@@ -137,7 +150,7 @@ export function Rechner() {
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         operations={operations}
-        onOpsChange={setOperations}
+        onOpsChange={handleOpsChange}
       />
     </div>
   );

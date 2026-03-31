@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Order } from '../../types/orders';
 import { tokens } from '../../styles/tokens';
+import { Backdrop, CenterPanel } from '../shared/Overlay';
 
 interface OrderFormProps {
   mode: 'create' | 'edit';
@@ -92,39 +93,12 @@ export function OrderForm({ mode, initial, onSave, onCancel }: OrderFormProps) {
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 120,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 14,
-      }}
-    >
-      <div
-        onClick={onCancel}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'rgba(0,0,0,0.55)',
-          animation: 'fadeIn 0.15s ease',
-        }}
-      />
-      <div
-        style={{
-          position: 'relative',
-          width: '100%',
-          maxWidth: 480,
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          border: `1px solid ${tokens.border}`,
-          background: tokens.surface,
-          borderRadius: 18,
-          padding: 16,
-          animation: 'fadeSlideUp 0.2s ease',
-        }}
+    <>
+      <Backdrop onClick={onCancel} zIndex={120} />
+      <CenterPanel
+        maxWidth={480}
+        zIndex={121}
+        style={{ maxHeight: '90vh', overflowY: 'auto', padding: 16 }}
       >
         {/* Header */}
         <div
@@ -232,7 +206,7 @@ export function OrderForm({ mode, initial, onSave, onCancel }: OrderFormProps) {
             {mode === 'create' ? 'Erstellen' : 'Speichern'}
           </button>
         </div>
-      </div>
-    </div>
+      </CenterPanel>
+    </>
   );
 }

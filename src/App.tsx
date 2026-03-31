@@ -1,21 +1,17 @@
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Topbar } from './components/layout/Topbar';
 import { Drawer } from './components/layout/Drawer';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
-import { getPageTitle } from './data/navigation';
-import { Handbuch } from './pages/Handbuch';
-import { Rechner } from './pages/Rechner';
-import { Auftraege } from './pages/Auftraege';
-import { Einstellungen } from './pages/Einstellungen';
-import { Start } from './pages/Start';
+import { routes, getPageTitle, getRoute } from './data/navigation';
 
 export function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const location = useLocation();
 
   const current = getPageTitle(location.pathname);
-  const isStart = location.pathname === '/';
+  const route = getRoute(location.pathname);
+  const hideChrome = route?.hideChrome ?? false;
 
   return (
     <div
@@ -25,7 +21,7 @@ export function App() {
         minHeight: '100vh',
       }}
     >
-      {!isStart && (
+      {!hideChrome && (
         <Topbar
           title={current.title}
           subtitle={current.subtitle}
@@ -36,14 +32,14 @@ export function App() {
 
       <main style={{ flex: 1 }}>
         <ErrorBoundary>
-          <Routes>
-            <Route path="/" element={<Start />} />
-            <Route path="/handbuch" element={<Handbuch />} />
-            <Route path="/rechner" element={<Rechner />} />
-            <Route path="/auftraege" element={<Auftraege />} />
-            <Route path="/einstellungen" element={<Einstellungen />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <Suspense fallback={null}>
+            <Routes>
+              {routes.map((r) => (
+                <Route key={r.path} path={r.path} element={<r.component />} />
+              ))}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </ErrorBoundary>
       </main>
     </div>
