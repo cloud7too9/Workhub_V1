@@ -1,14 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { RechnerCard as RechnerCardType, Operation } from '../types/rechner';
-import { loadCards, saveCards, loadOperations, saveOperations } from '../stores/rechnerStorage';
+import { loadCards, saveCards, loadOperations, saveOperations } from '../stores/rechnerStore';
+import { uid } from '../utils/uid';
 import { tokens } from '../styles/tokens';
 import { RechnerCard } from '../components/rechner/RechnerCard';
 import { SettingsDrawer } from '../components/rechner/SettingsDrawer';
-
-let _id = Date.now();
-function uid() {
-  return `r_${_id++}`;
-}
 
 export function Rechner() {
   const [cards, setCards] = useState<RechnerCardType[]>(() => loadCards());
@@ -27,7 +23,7 @@ export function Rechner() {
     setCards((prev) => [
       ...prev,
       {
-        id: uid(),
+        id: uid('r'),
         operationId: operations.length === 1 ? operations[0]!.id : '',
         inputs: {},
         history: [],

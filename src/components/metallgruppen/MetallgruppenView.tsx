@@ -15,7 +15,7 @@ import {
   deleteMaterial,
   loadChangelog,
   saveChangelog,
-} from '../../stores/materialStorage';
+} from '../../stores/materialStore';
 
 type FormState =
   | { mode: 'closed' }

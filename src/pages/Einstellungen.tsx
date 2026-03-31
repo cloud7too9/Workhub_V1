@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { ChangelogEntry } from '../types/changelog';
 import type { Material } from '../types/materials';
 import { tokens } from '../styles/tokens';
+import { TabBar } from '../components/shared/TabBar';
 import { ChangelogList } from '../components/einstellungen/ChangelogList';
 import { NotificationToggles } from '../components/einstellungen/NotificationToggles';
 import { ConfirmDialog } from '../components/shared/ConfirmDialog';
@@ -12,9 +13,9 @@ import {
   saveChangelog,
   undoEntry,
   resetToFactory,
-} from '../stores/materialStorage';
-import { loadSettings, saveSettings } from '../stores/settingsStorage';
-import type { AppSettings } from '../stores/settingsStorage';
+} from '../stores/materialStore';
+import { loadSettings, saveSettings } from '../stores/settingsStore';
+import type { AppSettings } from '../stores/settingsStore';
 
 type Section = 'changelog' | 'notifications';
 
@@ -39,7 +40,6 @@ export function Einstellungen() {
     setMaterials(updated);
     saveMaterials(updated);
 
-    // Remove the entry from changelog
     const newLog = changelog.filter((e) => e.id !== entry.id);
     setChangelog(newLog);
     saveChangelog(newLog);
@@ -52,73 +52,21 @@ export function Einstellungen() {
     setShowReset(false);
   };
 
-  const sections: { id: Section; label: string; count?: number }[] = [
-    { id: 'changelog', label: 'Änderungsprotokoll', count: changelog.length },
-    { id: 'notifications', label: 'Benachrichtigungen' },
-  ];
+  const tabs = useMemo(
+    () => [
+      { id: 'changelog' as const, label: 'Änderungsprotokoll', count: changelog.length },
+      { id: 'notifications' as const, label: 'Benachrichtigungen' },
+    ],
+    [changelog.length],
+  );
 
   return (
     <div>
-      {/* Section Tabs */}
-      <div
-        style={{
-          position: 'sticky',
-          top: 56,
-          zIndex: 30,
-          padding: '10px 14px',
-          background: 'rgba(13,15,15,0.86)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: `1px solid ${tokens.border}`,
-          display: 'flex',
-          gap: 8,
-        }}
-      >
-        {sections.map((s) => {
-          const isActive = activeSection === s.id;
-          return (
-            <button
-              key={s.id}
-              onClick={() => setActiveSection(s.id)}
-              style={{
-                height: 38,
-                padding: '0 14px',
-                borderRadius: 10,
-                border: `1px solid ${isActive ? tokens.accent + '50' : tokens.border}`,
-                background: isActive ? tokens.accentDim : 'transparent',
-                color: isActive ? tokens.accent : tokens.muted,
-                fontSize: 13,
-                fontWeight: isActive ? 600 : 400,
-                cursor: 'pointer',
-                fontFamily: tokens.font.ui,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              {s.label}
-              {s.count !== undefined && s.count > 0 && (
-                <span
-                  style={{
-                    fontFamily: tokens.font.mono,
-                    fontSize: 11,
-                    background: isActive ? tokens.accent + '30' : tokens.border,
-                    padding: '1px 6px',
-                    borderRadius: 6,
-                  }}
-                >
-                  {s.count}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+      <TabBar tabs={tabs} active={activeSection} onChange={setActiveSection} />
 
-      {/* Content */}
       <div style={{ padding: 14 }}>
         {activeSection === 'changelog' && (
           <div>
-            {/* Reset Button */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
               <button
                 onClick={() => setShowReset(true)}
@@ -138,7 +86,6 @@ export function Einstellungen() {
                 Auf Werkszustand zurücksetzen
               </button>
             </div>
-
             <ChangelogList entries={changelog} onUndo={handleUndo} />
           </div>
         )}
@@ -151,7 +98,6 @@ export function Einstellungen() {
         )}
       </div>
 
-      {/* Reset Confirm */}
       {showReset && (
         <ConfirmDialog
           title="Werkszustand wiederherstellen"

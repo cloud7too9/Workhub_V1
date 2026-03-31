@@ -2,8 +2,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { tokens } from '../../styles/tokens';
 import { getSidebarItems } from '../../data/navigation';
 
-const navItems = getSidebarItems();
-
 interface DrawerProps {
   open: boolean;
   onClose: () => void;
@@ -12,6 +10,7 @@ interface DrawerProps {
 export function Drawer({ open, onClose }: DrawerProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const navItems = getSidebarItems();
 
   const handleNav = (path: string) => {
     navigate(path);

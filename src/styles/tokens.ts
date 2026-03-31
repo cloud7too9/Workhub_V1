@@ -47,6 +47,11 @@ export const tokens = {
   touch: {
     minHeight: 48,
   },
+
+  // Layout
+  layout: {
+    topbarHeight: 56,
+  },
 } as const;
 
 export type MetalColorKey = keyof typeof tokens.metal;

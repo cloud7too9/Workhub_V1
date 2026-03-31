@@ -176,7 +176,7 @@ export function Start() {
         paddingBottom: 40,
         position: 'relative',
         overflow: 'hidden',
-        minHeight: 'calc(100vh - 56px)',
+        minHeight: '100vh',
       }}
     >
       {/* Ambient glow */}

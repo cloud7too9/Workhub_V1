@@ -43,7 +43,7 @@ export function OrderFilterBar({
       <select
         value={statusFilter}
         onChange={(e) => onStatusChange(e.target.value as OrderStatusFilter)}
-        style={{ ...selectStyle, width: 150 }}
+        style={{ ...selectStyle, width: 140 }}
       >
         <option value="all">Alle Status</option>
         {(Object.entries(orderStatusLabels) as [OrderStatusFilter, string][]).map(
