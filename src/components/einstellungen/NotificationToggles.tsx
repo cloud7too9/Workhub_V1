@@ -102,23 +102,6 @@ export function NotificationToggles({ settings, onChange }: NotificationTogglesP
         checked={settings.haptic}
         onChange={(v) => onChange({ ...settings, haptic: v })}
       />
-
-      {/* Placeholder hint */}
-      <div
-        style={{
-          marginTop: 8,
-          padding: '10px 14px',
-          borderRadius: 10,
-          border: `1px dashed ${tokens.border}`,
-          fontSize: 11,
-          color: tokens.muted,
-          lineHeight: 1.5,
-        }}
-      >
-        Diese Einstellungen speichern vorerst nur Präferenzen.
-        Push-Benachrichtigungen, Ton und Haptik werden in einem
-        späteren Update mit der Notification-API verbunden.
-      </div>
     </div>
   );
 }

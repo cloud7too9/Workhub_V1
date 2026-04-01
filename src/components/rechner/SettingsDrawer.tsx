@@ -2,7 +2,6 @@ import { useState } from 'react';
 import type { Operation } from '../../types/rechner';
 import { tokens } from '../../styles/tokens';
 import { FormulaBuilder } from './FormulaBuilder';
-import { Backdrop, SideDrawer, OverlayHeader } from '../shared/Overlay';
 
 interface SettingsDrawerProps {
   open: boolean;
@@ -44,29 +43,84 @@ export function SettingsDrawer({ open, onClose, operations, onOpsChange }: Setti
     setIsNew(false);
   };
 
-  const handleClose = () => {
-    handleCancel();
-    onClose();
-  };
-
   const showBuilder = editingOp !== null || isNew;
 
   return (
     <>
-      {open && <Backdrop onClick={handleClose} />}
+      {/* Backdrop */}
+      {open && (
+        <div
+          onClick={onClose}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 90,
+            background: 'rgba(0,0,0,0.6)',
+            animation: 'fadeIn 0.2s ease',
+          }}
+        />
+      )}
 
-      <SideDrawer open={open} side="right" width={380}>
-        <OverlayHeader
-          title={
-            showBuilder
+      {/* Drawer */}
+      <aside
+        style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 100,
+          width: 380,
+          maxWidth: '90vw',
+          background: tokens.surface,
+          borderLeft: `1px solid ${tokens.border}`,
+          transform: open ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.25s ease',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '16px 16px',
+            borderBottom: `1px solid ${tokens.border}`,
+            flexShrink: 0,
+          }}
+        >
+          <span style={{ fontSize: 16, fontWeight: 700, color: tokens.text }}>
+            {showBuilder
               ? isNew
                 ? 'Neue Operation'
                 : 'Operation bearbeiten'
-              : 'Rechner-Einstellungen'
-          }
-          onClose={handleClose}
-        />
+              : 'Rechner-Einstellungen'}
+          </span>
+          <button
+            onClick={() => {
+              handleCancel();
+              onClose();
+            }}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              border: `1px solid ${tokens.border}`,
+              background: 'transparent',
+              color: tokens.muted,
+              fontSize: 16,
+              cursor: 'pointer',
+              display: 'grid',
+              placeItems: 'center',
+            }}
+          >
+            ✕
+          </button>
+        </div>
 
+        {/* Content */}
         <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
           {showBuilder ? (
             <FormulaBuilder operation={editingOp} onSave={handleSave} onCancel={handleCancel} />
@@ -168,7 +222,7 @@ export function SettingsDrawer({ open, onClose, operations, onOpsChange }: Setti
             </div>
           )}
         </div>
-      </SideDrawer>
+      </aside>
     </>
   );
 }

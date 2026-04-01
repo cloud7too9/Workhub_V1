@@ -1,10 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { RechnerCard as RechnerCardType, Operation } from '../types/rechner';
-import { loadCards, saveCards, loadOperations, saveOperations } from '../stores/rechnerStore';
-import { uid } from '../utils/uid';
+import { loadCards, saveCards, loadOperations, saveOperations } from '../stores/rechnerStorage';
 import { tokens } from '../styles/tokens';
 import { RechnerCard } from '../components/rechner/RechnerCard';
 import { SettingsDrawer } from '../components/rechner/SettingsDrawer';
+
+let _id = Date.now();
+function uid() {
+  return `r_${_id++}`;
+}
 
 export function Rechner() {
   const [cards, setCards] = useState<RechnerCardType[]>(() => loadCards());
@@ -23,26 +27,13 @@ export function Rechner() {
     setCards((prev) => [
       ...prev,
       {
-        id: uid('r'),
+        id: uid(),
         operationId: operations.length === 1 ? operations[0]!.id : '',
         inputs: {},
         history: [],
       },
     ]);
   }, [operations]);
-
-  // When operations change, reset any cards whose operation was deleted
-  const handleOpsChange = useCallback((newOps: Operation[]) => {
-    setOperations(newOps);
-    const validIds = new Set(newOps.map((o) => o.id));
-    setCards((prev) =>
-      prev.map((c) =>
-        c.operationId && !validIds.has(c.operationId)
-          ? { ...c, operationId: '', inputs: {} }
-          : c,
-      ),
-    );
-  }, []);
 
   const updateCard = useCallback((updated: RechnerCardType) => {
     setCards((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
@@ -150,7 +141,7 @@ export function Rechner() {
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         operations={operations}
-        onOpsChange={handleOpsChange}
+        onOpsChange={setOperations}
       />
     </div>
   );

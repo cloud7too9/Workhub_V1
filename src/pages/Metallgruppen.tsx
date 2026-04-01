@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
-import { metalGroups } from '../../data/metalGroups';
-import type { Material } from '../../types/materials';
-import type { ChangelogEntry } from '../../types/changelog';
-import { tokens } from '../../styles/tokens';
-import { SearchInput } from '../shared/SearchInput';
-import { ConfirmDialog } from '../shared/ConfirmDialog';
-import { GroupCard } from '../metallgruppen/GroupCard';
-import { MaterialForm } from '../metallgruppen/MaterialForm';
+import { metalGroups } from '../data/metalGroups';
+import type { Material } from '../types/materials';
+import type { ChangelogEntry } from '../types/changelog';
+import { tokens } from '../styles/tokens';
+import { SearchInput } from '../components/shared/SearchInput';
+import { ConfirmDialog } from '../components/shared/ConfirmDialog';
+import { GroupCard } from '../components/metallgruppen/GroupCard';
+import { MaterialForm } from '../components/metallgruppen/MaterialForm';
 import {
   initMaterials,
   saveMaterials,
@@ -15,7 +15,7 @@ import {
   deleteMaterial,
   loadChangelog,
   saveChangelog,
-} from '../../stores/materialStorage';
+} from '../stores/useMaterialStore';
 
 type FormState =
   | { mode: 'closed' }
@@ -26,7 +26,7 @@ type DeleteState =
   | { mode: 'closed' }
   | { mode: 'confirm'; material: Material };
 
-export function MetallgruppenView() {
+export function Metallgruppen() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [changelog, setChangelog] = useState<ChangelogEntry[]>([]);
   const [search, setSearch] = useState('');
@@ -34,27 +34,25 @@ export function MetallgruppenView() {
   const [formState, setFormState] = useState<FormState>({ mode: 'closed' });
   const [deleteState, setDeleteState] = useState<DeleteState>({ mode: 'closed' });
 
+  // Init materials from localStorage / JSON
   useEffect(() => {
-    initMaterials().then((mats) => {
-      setMaterials(mats);
-      setChangelog(loadChangelog());
-      setInitialized(true);
-    });
+    initMaterials().then(setMaterials);
+    setChangelog(loadChangelog());
   }, []);
 
-  // Track if we've loaded once to avoid saving initial empty state
-  const [initialized, setInitialized] = useState(false);
-
+  // Persist on change
   useEffect(() => {
-    if (initialized) saveMaterials(materials);
-  }, [materials, initialized]);
+    if (materials.length > 0) saveMaterials(materials);
+  }, [materials]);
   useEffect(() => {
-    if (initialized) saveChangelog(changelog);
-  }, [changelog, initialized]);
+    saveChangelog(changelog);
+  }, [changelog]);
 
+  // Helper: get materials for a group
   const getMaterials = (groupId: string) =>
     materials.filter((m) => m.groupId === groupId);
 
+  // Filter groups by search
   const filteredGroups = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return metalGroups;
@@ -66,6 +64,8 @@ export function MetallgruppenView() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, materials]);
+
+  // ── CRUD Handlers ──
 
   const handleAdd = (name: string, notes: string) => {
     if (formState.mode !== 'add') return;
@@ -95,32 +95,45 @@ export function MetallgruppenView() {
     setDeleteState({ mode: 'closed' });
   };
 
+  // Find group name for form display
   const getGroupName = (groupId: string) =>
     metalGroups.find((g) => g.id === groupId)?.name ?? groupId;
 
   return (
     <div>
-      {/* Search */}
-      <div style={{ padding: '0 14px 10px', display: 'flex', gap: 10, alignItems: 'center' }}>
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Gruppe oder Werkstoff suchen…"
-        />
-        <div
-          style={{
-            fontFamily: tokens.font.mono,
-            fontSize: 11,
-            color: tokens.muted,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {metalGroups.length} Gruppen · {materials.length} Werkstoffe
+      {/* Sticky Controls */}
+      <div
+        style={{
+          position: 'sticky',
+          top: 56,
+          zIndex: 30,
+          padding: '10px 14px',
+          background: 'rgba(13,15,15,0.86)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: `1px solid ${tokens.border}`,
+        }}
+      >
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Gruppe oder Werkstoff suchen…"
+          />
+          <div
+            style={{
+              fontFamily: tokens.font.mono,
+              fontSize: 11,
+              color: tokens.muted,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {metalGroups.length} Gruppen · {materials.length} Werkstoffe
+          </div>
         </div>
       </div>
 
       {/* Groups */}
-      <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
         {filteredGroups.map((g) => {
           const groupMats = getMaterials(g.id);
           return (
@@ -144,6 +157,7 @@ export function MetallgruppenView() {
         )}
       </div>
 
+      {/* Add Form */}
       {formState.mode === 'add' && (
         <MaterialForm
           mode="add"
@@ -153,6 +167,7 @@ export function MetallgruppenView() {
         />
       )}
 
+      {/* Edit Form */}
       {formState.mode === 'edit' && (
         <MaterialForm
           mode="edit"
@@ -164,6 +179,7 @@ export function MetallgruppenView() {
         />
       )}
 
+      {/* Delete Confirm */}
       {deleteState.mode === 'confirm' && (
         <ConfirmDialog
           title="Material löschen"

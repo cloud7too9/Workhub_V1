@@ -17,7 +17,7 @@ export function Topbar({ title, subtitle, onMenuClick }: TopbarProps) {
         alignItems: 'center',
         gap: 12,
         padding: '0 16px',
-        height: tokens.layout.topbarHeight,
+        height: 56,
         background: tokens.surface,
         borderBottom: `1px solid ${tokens.border}`,
       }}

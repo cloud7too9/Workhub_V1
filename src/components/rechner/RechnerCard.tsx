@@ -2,8 +2,12 @@ import { useState } from 'react';
 import type { RechnerCard as RechnerCardType, Operation, ComputedResult } from '../../types/rechner';
 import { executeOperation, buildInputSummary } from '../../data/operations';
 import { tokens } from '../../styles/tokens';
-import { uid } from '../../utils/uid';
 import { HistoryItem } from './HistoryItem';
+
+let _id = Date.now();
+function uid() {
+  return `h_${_id++}`;
+}
 
 interface RechnerCardProps {
   card: RechnerCardType;
@@ -18,7 +22,6 @@ export function RechnerCard({ card, operations, onUpdate, onRemove }: RechnerCar
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const op = operations.find((o) => o.id === card.operationId);
-  const isOrphan = !op && card.operationId !== '';
 
   const handleOpChange = (opId: string) => {
     setInputs({});
@@ -39,7 +42,7 @@ export function RechnerCard({ card, operations, onUpdate, onRemove }: RechnerCar
     setResult(res);
 
     const entry = {
-      id: uid('h'),
+      id: uid(),
       timestamp: Date.now(),
       summary: res.summary,
       inputSummary: buildInputSummary(op, inputs),
@@ -81,7 +84,7 @@ export function RechnerCard({ card, operations, onUpdate, onRemove }: RechnerCar
               width: 8,
               height: 8,
               borderRadius: '50%',
-              background: isOrphan ? tokens.warning : op ? tokens.accent : tokens.muted,
+              background: op ? tokens.accent : tokens.muted,
               flexShrink: 0,
             }}
           />
@@ -122,7 +125,7 @@ export function RechnerCard({ card, operations, onUpdate, onRemove }: RechnerCar
             Rechenoperation
           </div>
           <select
-            value={isOrphan ? '' : (card.operationId || '')}
+            value={card.operationId || ''}
             onChange={(e) => handleOpChange(e.target.value)}
             style={{
               width: '100%',
@@ -150,21 +153,6 @@ export function RechnerCard({ card, operations, onUpdate, onRemove }: RechnerCar
           {op?.description && (
             <div style={{ fontSize: 11, color: tokens.muted, marginTop: 4 }}>
               {op.description}
-            </div>
-          )}
-          {isOrphan && (
-            <div
-              style={{
-                fontSize: 11,
-                color: tokens.warning,
-                marginTop: 4,
-                padding: '6px 10px',
-                borderRadius: 8,
-                background: `${tokens.warning}15`,
-                border: `1px solid ${tokens.warning}30`,
-              }}
-            >
-              Operation wurde gelöscht — bitte neu wählen
             </div>
           )}
         </div>

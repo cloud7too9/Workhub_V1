@@ -1,16 +1,10 @@
 import { useState } from 'react';
 import type { Order } from '../../types/orders';
-import type { ImportSource } from '../../types/import';
 import { tokens } from '../../styles/tokens';
-import { Backdrop, CenterPanel } from '../shared/Overlay';
-import { ImportPreview } from '../import/ImportPreview';
 
 interface OrderFormProps {
   mode: 'create' | 'edit';
   initial?: Partial<Order>;
-  /** Pending import source (shown as preview in create mode) */
-  importPreview?: ImportSource | null;
-  onRemoveImport?: () => void;
   onSave: (data: {
     article: string;
     material: string;
@@ -66,7 +60,7 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
 };
 
-export function OrderForm({ mode, initial, importPreview, onRemoveImport, onSave, onCancel }: OrderFormProps) {
+export function OrderForm({ mode, initial, onSave, onCancel }: OrderFormProps) {
   const [article, setArticle] = useState(initial?.article ?? '');
   const [material, setMaterial] = useState(initial?.material ?? '');
   const [dimensions, setDimensions] = useState(initial?.dimensions ?? '');
@@ -98,12 +92,39 @@ export function OrderForm({ mode, initial, importPreview, onRemoveImport, onSave
   };
 
   return (
-    <>
-      <Backdrop onClick={onCancel} zIndex={120} />
-      <CenterPanel
-        maxWidth={480}
-        zIndex={121}
-        style={{ maxHeight: '90vh', overflowY: 'auto', padding: 16 }}
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 120,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 14,
+      }}
+    >
+      <div
+        onClick={onCancel}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.55)',
+          animation: 'fadeIn 0.15s ease',
+        }}
+      />
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: 480,
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          border: `1px solid ${tokens.border}`,
+          background: tokens.surface,
+          borderRadius: 18,
+          padding: 16,
+          animation: 'fadeSlideUp 0.2s ease',
+        }}
       >
         {/* Header */}
         <div
@@ -115,9 +136,7 @@ export function OrderForm({ mode, initial, importPreview, onRemoveImport, onSave
           }}
         >
           <span style={{ fontSize: 16, fontWeight: 700, color: tokens.text }}>
-            {mode === 'create'
-              ? importPreview ? 'Auftrag aus Import' : 'Neuer Auftrag'
-              : 'Auftrag bearbeiten'}
+            {mode === 'create' ? 'Neuer Auftrag' : 'Auftrag bearbeiten'}
           </span>
           <button
             onClick={onCancel}
@@ -137,13 +156,6 @@ export function OrderForm({ mode, initial, importPreview, onRemoveImport, onSave
             ✕
           </button>
         </div>
-
-        {/* Import preview */}
-        {importPreview && onRemoveImport && (
-          <div style={{ marginBottom: 12 }}>
-            <ImportPreview source={importPreview} onRemove={onRemoveImport} />
-          </div>
-        )}
 
         <div style={{ display: 'grid', gap: 12 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -220,7 +232,7 @@ export function OrderForm({ mode, initial, importPreview, onRemoveImport, onSave
             {mode === 'create' ? 'Erstellen' : 'Speichern'}
           </button>
         </div>
-      </CenterPanel>
-    </>
+      </div>
+    </div>
   );
 }
