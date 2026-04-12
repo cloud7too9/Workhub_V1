@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react';
 import type { Order, OrderStatusFilter, OrderSortMode } from '@/types/orders';
+import type { CreateOrderInput } from '@/stores/orderStorage';
 import { Button, EmptyState, Modal } from '@/ui';
 import { OrderFilterBar } from '../components/OrderFilterBar';
 import { OrderCard } from '../components/OrderCard';
@@ -22,8 +23,8 @@ interface AuftraegeViewProps {
   onOpenCreate: () => void;
   onOpenEdit: (order: Order) => void;
   onCloseForm: () => void;
-  onCreate: (data: Record<string, unknown>) => void;
-  onUpdate: (data: Record<string, unknown>) => void;
+  onCreate: (data: CreateOrderInput) => void;
+  onUpdate: (data: CreateOrderInput) => void;
   onAdvance: (id: string) => void;
   onConfirmDelete: (order: Order) => void;
   onDeleteConfirm: () => void;
