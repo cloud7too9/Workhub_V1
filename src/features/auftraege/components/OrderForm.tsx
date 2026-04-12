@@ -1,20 +1,11 @@
 import { useState } from 'react';
-import type { Order } from '@/types/orders';
+import type { OrderFormData, OrderFormInitial } from '../types/ui.types';
 
 
 interface OrderFormProps {
   mode: 'create' | 'edit';
-  initial?: Partial<Order>;
-  onSave: (data: {
-    article: string;
-    material: string;
-    dimensions: string;
-    quantity: number;
-    deliveryDate: string;
-    orderNumber: string;
-    customer: string;
-    notes: string;
-  }) => void;
+  initial?: OrderFormInitial;
+  onSave: (data: OrderFormData) => void;
   onCancel: () => void;
 }
 
@@ -51,7 +42,7 @@ const inputStyle: React.CSSProperties = {
   width: '100%',
   height: 44,
   borderRadius: 12,
-  border: `1px solid ${'var(--border)'}`,
+  border: '1px solid var(--border)',
   background: 'var(--bg)',
   color: 'var(--text-1)',
   padding: '0 12px',
@@ -119,7 +110,7 @@ export function OrderForm({ mode, initial, onSave, onCancel }: OrderFormProps) {
           maxWidth: 480,
           maxHeight: '90vh',
           overflowY: 'auto',
-          border: `1px solid ${'var(--border)'}`,
+          border: '1px solid var(--border)',
           background: 'var(--surface)',
           borderRadius: 18,
           padding: 16,
@@ -144,7 +135,7 @@ export function OrderForm({ mode, initial, onSave, onCancel }: OrderFormProps) {
               width: 32,
               height: 32,
               borderRadius: 8,
-              border: `1px solid ${'var(--border)'}`,
+              border: '1px solid var(--border)',
               background: 'transparent',
               color: 'var(--text-3)',
               fontSize: 14,
@@ -211,7 +202,7 @@ export function OrderForm({ mode, initial, onSave, onCancel }: OrderFormProps) {
             onClick={onCancel}
             style={{
               flex: 1, height: 48, borderRadius: 12,
-              border: `1px solid ${'var(--border)'}`, background: 'transparent',
+              border: '1px solid var(--border)', background: 'transparent',
               color: 'var(--text-3)', fontSize: 14, fontWeight: 600,
               cursor: 'pointer', fontFamily: 'var(--font-sans)',
             }}

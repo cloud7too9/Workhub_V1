@@ -1,15 +1,5 @@
-import type { OrderStatusFilter, OrderSortMode } from '@/types/orders';
-import { orderStatusLabels } from '@/data/orderStatus';
 import { SearchField } from '@/ui';
-
-interface OrderFilterBarProps {
-  statusFilter: OrderStatusFilter;
-  onStatusChange: (f: OrderStatusFilter) => void;
-  searchTerm: string;
-  onSearchChange: (t: string) => void;
-  sortMode: OrderSortMode;
-  onSortChange: (m: OrderSortMode) => void;
-}
+import type { OrderFilterBarProps, StatusFilterValue, SortModeValue } from '../types/ui.types';
 
 const selectStyle: React.CSSProperties = {
   height: '44px', borderRadius: 'var(--radius-md)',
@@ -19,22 +9,31 @@ const selectStyle: React.CSSProperties = {
 };
 
 export function OrderFilterBar({
-  statusFilter, onStatusChange, searchTerm, onSearchChange, sortMode, onSortChange,
+  statusFilter, statusOptions, searchTerm, sortMode,
+  onStatusChange, onSearchChange, onSortChange,
 }: OrderFilterBarProps) {
   return (
     <div style={{ display: 'flex', gap: 'var(--sp-sm)', flexWrap: 'wrap', alignItems: 'center' }}>
       <div style={{ flex: 1, minWidth: '140px' }}>
         <SearchField value={searchTerm} onChange={onSearchChange} placeholder="Suchen..." />
       </div>
-      <select value={statusFilter} onChange={(e) => onStatusChange(e.target.value as OrderStatusFilter)} style={{ ...selectStyle, width: '140px' }}>
+      <select
+        value={statusFilter}
+        onChange={(e) => onStatusChange(e.target.value as StatusFilterValue)}
+        style={{ ...selectStyle, width: '140px' }}
+      >
         <option value="all">Alle Status</option>
-        {(Object.entries(orderStatusLabels) as [OrderStatusFilter, string][]).map(([key, label]) => (
-          <option key={key} value={key}>{label}</option>
+        {statusOptions.map((opt) => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
         ))}
       </select>
-      <select value={sortMode} onChange={(e) => onSortChange(e.target.value as OrderSortMode)} style={{ ...selectStyle, width: '160px' }}>
-        <option value="deliveryDateAsc">Lieferdatum ↑</option>
-        <option value="deliveryDateDesc">Lieferdatum ↓</option>
+      <select
+        value={sortMode}
+        onChange={(e) => onSortChange(e.target.value as SortModeValue)}
+        style={{ ...selectStyle, width: '160px' }}
+      >
+        <option value="deliveryDateAsc">Lieferdatum &#8593;</option>
+        <option value="deliveryDateDesc">Lieferdatum &#8595;</option>
         <option value="updatedAtDesc">Zuletzt geändert</option>
       </select>
     </div>
