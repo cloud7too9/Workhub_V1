@@ -1,42 +1,24 @@
-import { useState } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
-import { Topbar } from './components/layout/Topbar';
-import { Drawer } from './components/layout/Drawer';
-import { getPageTitle } from './data/navigation';
-import { Handbuch } from './pages/Handbuch';
-import { Rechner } from './pages/Rechner';
-import { Auftraege } from './pages/Auftraege';
-import { Einstellungen } from './pages/Einstellungen';
+import { Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from './app/providers/ThemeProvider';
+import { AppLayout } from './app/layout/AppLayout';
+
+// Alle Pages migriert
+import { HandbuchPage } from './pages/HandbuchPage';
+import { RechnerPage } from './pages/RechnerPage';
+import { AuftraegePage } from './pages/AuftraegePage';
+import { EinstellungenPage } from './pages/EinstellungenPage';
 
 export function App() {
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const location = useLocation();
-
-  const current = getPageTitle(location.pathname);
-
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-      }}
-    >
-      <Topbar
-        title={current.title}
-        subtitle={current.subtitle}
-        onMenuClick={() => setDrawerOpen(true)}
-      />
-      <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-
-      <main style={{ flex: 1 }}>
+    <ThemeProvider>
+      <AppLayout>
         <Routes>
-          <Route path="/" element={<Handbuch />} />
-          <Route path="/rechner" element={<Rechner />} />
-          <Route path="/auftraege" element={<Auftraege />} />
-          <Route path="/einstellungen" element={<Einstellungen />} />
+          <Route path="/" element={<HandbuchPage />} />
+          <Route path="/rechner" element={<RechnerPage />} />
+          <Route path="/auftraege" element={<AuftraegePage />} />
+          <Route path="/einstellungen" element={<EinstellungenPage />} />
         </Routes>
-      </main>
-    </div>
+      </AppLayout>
+    </ThemeProvider>
   );
 }

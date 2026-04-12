@@ -1,63 +1,105 @@
-/* ── Reset ── */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+@import './reset.css';
 
-/* ── Base ── */
-html,
-body,
-#root {
-  height: 100%;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+:root {
+  --bg: #060709;
+  --surface: #0d0f14;
+  --surface-alt: #13161d;
+  --border: #1e2230;
+  --border-subtle: #161a24;
+  --text-1: #e8eaed;
+  --text-2: #8b8fa3;
+  --text-3: #565a6e;
+  --accent: #00e5ff;
+  --accent-muted: rgba(0,229,255,0.12);
+  --accent-hover: #00c8e0;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
+
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  --sp-xs: 4px;
+  --sp-sm: 8px;
+  --sp-md: 12px;
+  --sp-lg: 16px;
+  --sp-xl: 20px;
+  --sp-2xl: 24px;
+  --sp-3xl: 32px;
+  --pad: 20px;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.6);
+  --shadow-glow: 0 0 20px rgba(0,229,255,0.15);
 }
 
 body {
-  font-family: 'DM Sans', sans-serif;
-  background: #060709;
-  color: #f1f5f9;
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text-1);
   overflow-x: hidden;
 }
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar {
-  width: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #1a1d27;
-  border-radius: 4px;
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+::selection { background: var(--accent-muted); color: var(--accent); }
+
+/* ── Animations ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ── Interactive states ── */
+button { -webkit-tap-highlight-color: transparent; }
+button:active:not(:disabled) { transform: scale(0.97); }
+
+[role="button"]:hover {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 1px var(--accent-muted), var(--shadow-glow);
 }
 
-/* ── Focus ── */
-:focus-visible {
-  outline: 2px solid #00e5ff40;
+/* ── Focus rings ── */
+button:focus-visible,
+input:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-/* ── Animations ── */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+input:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-muted);
 }
 
-@keyframes fadeSlideDown {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+@media (hover: hover) {
+  button:hover:not(:disabled) { filter: brightness(1.08); }
 }
 
-@keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* ── Skip link ── */
+.skip-link {
+  position: absolute; top: -100px; left: 16px; z-index: 999;
+  padding: 12px 20px; background: var(--accent); color: var(--bg);
+  border-radius: var(--radius-md); font-weight: 600; font-size: 14px;
+  text-decoration: none; transition: top 0.2s ease;
 }
+.skip-link:focus { top: 16px; }
 
-/* ── Utility ── */
-.mono {
-  font-family: 'JetBrains Mono', monospace;
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
