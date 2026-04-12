@@ -1,41 +1,35 @@
 import { Plus } from 'lucide-react';
-import type { Order, OrderStatusFilter, OrderSortMode } from '@/types/orders';
-import type { CreateOrderInput } from '@/stores/orderStorage';
 import { Button, EmptyState, Modal } from '@/ui';
+import type {
+  OrderCardProps, OrderFilterBarProps, OrderSummary,
+  DeleteTarget, OrderFormData, OrderFormInitial,
+} from '../types/ui.types';
 import { OrderFilterBar } from '../components/OrderFilterBar';
 import { OrderCard } from '../components/OrderCard';
 import { OrderForm } from '../components/OrderForm';
 
-type FormState = { mode: 'closed' } | { mode: 'create' } | { mode: 'edit'; order: Order };
-type DeleteState = { mode: 'closed' } | { mode: 'confirm'; order: Order };
+type FormState =
+  | { mode: 'closed' }
+  | { mode: 'create' }
+  | { mode: 'edit'; initial: OrderFormInitial };
 
 interface AuftraegeViewProps {
-  orders: Order[];
-  filtered: Order[];
-  statusFilter: OrderStatusFilter;
-  searchTerm: string;
-  sortMode: OrderSortMode;
+  summary: OrderSummary;
+  cards: OrderCardProps[];
+  filter: OrderFilterBarProps;
   formState: FormState;
-  deleteState: DeleteState;
-  onStatusFilterChange: (f: OrderStatusFilter) => void;
-  onSearchChange: (t: string) => void;
-  onSortChange: (m: OrderSortMode) => void;
+  deleteTarget: DeleteTarget | null;
   onOpenCreate: () => void;
-  onOpenEdit: (order: Order) => void;
   onCloseForm: () => void;
-  onCreate: (data: CreateOrderInput) => void;
-  onUpdate: (data: CreateOrderInput) => void;
-  onAdvance: (id: string) => void;
-  onConfirmDelete: (order: Order) => void;
+  onFormSave: (data: OrderFormData) => void;
   onDeleteConfirm: () => void;
   onDeleteCancel: () => void;
 }
 
 export function AuftraegeView({
-  orders, filtered, statusFilter, searchTerm, sortMode, formState, deleteState,
-  onStatusFilterChange, onSearchChange, onSortChange,
-  onOpenCreate, onOpenEdit, onCloseForm, onCreate, onUpdate,
-  onAdvance, onConfirmDelete, onDeleteConfirm, onDeleteCancel,
+  summary, cards, filter, formState, deleteTarget,
+  onOpenCreate, onCloseForm, onFormSave,
+  onDeleteConfirm, onDeleteCancel,
 }: AuftraegeViewProps) {
   return (
     <div>
@@ -49,7 +43,7 @@ export function AuftraegeView({
             Aufträge
           </h2>
           <p style={{ fontSize: '12px', color: 'var(--text-3)' }}>
-            {orders.length} gesamt · {orders.filter(o => o.status === 'open').length} offen
+            {summary.total} gesamt · {summary.openCount} offen
           </p>
         </div>
         <Button variant="secondary" size="sm" icon={<Plus size={16} />} onClick={onOpenCreate}>
@@ -59,42 +53,35 @@ export function AuftraegeView({
 
       {/* Filters */}
       <div style={{ marginBottom: 'var(--sp-md)' }}>
-        <OrderFilterBar
-          statusFilter={statusFilter} onStatusChange={onStatusFilterChange}
-          searchTerm={searchTerm} onSearchChange={onSearchChange}
-          sortMode={sortMode} onSortChange={onSortChange}
-        />
+        <OrderFilterBar {...filter} />
       </div>
 
       {/* Order List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-sm)' }}>
-        {filtered.map((o) => (
-          <OrderCard
-            key={o.id} order={o}
-            onAdvance={() => onAdvance(o.id)}
-            onEdit={() => onOpenEdit(o)}
-            onDelete={() => onConfirmDelete(o)}
-          />
+        {cards.map((card) => (
+          <OrderCard key={card.id} {...card} />
         ))}
       </div>
 
-      {filtered.length === 0 && orders.length > 0 && (
+      {cards.length === 0 && summary.total > 0 && (
         <EmptyState title="Keine Aufträge für diesen Filter" description="Versuch einen anderen Filter oder Suchbegriff." />
       )}
-      {orders.length === 0 && (
+      {summary.total === 0 && (
         <EmptyState title="Noch keine Aufträge" description='Klicke oben auf "+ Auftrag" um loszulegen' />
       )}
 
-      {/* Forms */}
+      {/* Create Form */}
       {formState.mode === 'create' && (
-        <OrderForm mode="create" onSave={onCreate} onCancel={onCloseForm} />
+        <OrderForm mode="create" onSave={onFormSave} onCancel={onCloseForm} />
       )}
+
+      {/* Edit Form */}
       {formState.mode === 'edit' && (
-        <OrderForm mode="edit" initial={formState.order} onSave={onUpdate} onCancel={onCloseForm} />
+        <OrderForm mode="edit" initial={formState.initial} onSave={onFormSave} onCancel={onCloseForm} />
       )}
 
       {/* Delete Confirm */}
-      {deleteState.mode === 'confirm' && (
+      {deleteTarget && (
         <Modal open onClose={onDeleteCancel} title="Auftrag löschen" actions={
           <>
             <Button variant="secondary" onClick={onDeleteCancel} fullWidth>Abbrechen</Button>
@@ -102,7 +89,7 @@ export function AuftraegeView({
           </>
         }>
           <p style={{ fontSize: '14px', color: 'var(--text-2)' }}>
-            &bdquo;{deleteState.order.article}&ldquo; wirklich löschen?
+            &bdquo;{deleteTarget.label}&ldquo; wirklich löschen?
           </p>
         </Modal>
       )}

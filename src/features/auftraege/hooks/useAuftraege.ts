@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import type { Order, OrderStatusFilter, OrderSortMode, OrderHistoryEntry } from '@/types/orders';
+import type { Order, OrderHistoryEntry } from '@/types/orders';
 import {
   loadOrders, saveOrders, loadOrderHistory, saveOrderHistory,
-  createOrder, updateOrder, deleteOrder, advanceOrderStatus, applyOrderView,
+  createOrder, updateOrder, deleteOrder, advanceOrderStatus,
 } from '@/stores/orderStorage';
+import { selectFilteredOrders } from '../selectors/order.selectors';
+import type { StatusFilterValue, SortModeValue } from '../types/ui.types';
 
 type FormState =
   | { mode: 'closed' }
@@ -17,9 +19,9 @@ type DeleteState =
 export function useAuftraege() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [history, setHistory] = useState<OrderHistoryEntry[]>([]);
-  const [statusFilter, setStatusFilter] = useState<OrderStatusFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilterValue>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortMode, setSortMode] = useState<OrderSortMode>('deliveryDateAsc');
+  const [sortMode, setSortMode] = useState<SortModeValue>('deliveryDateAsc');
   const [formState, setFormState] = useState<FormState>({ mode: 'closed' });
   const [deleteState, setDeleteState] = useState<DeleteState>({ mode: 'closed' });
 
@@ -32,7 +34,7 @@ export function useAuftraege() {
   useEffect(() => { saveOrderHistory(history); }, [history]);
 
   const filtered = useMemo(
-    () => applyOrderView(orders, { statusFilter, searchTerm, sortMode }),
+    () => selectFilteredOrders(orders, { statusFilter, searchTerm, sortMode }),
     [orders, statusFilter, searchTerm, sortMode],
   );
 
