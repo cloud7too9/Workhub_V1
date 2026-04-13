@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuftraege } from '@/features/auftraege/hooks/useAuftraege';
 import {
   mapOrderToCard, mapOrdersToSummary, mapOrderToDeleteTarget,
-  mapOrderToFormInitial, getStatusOptions, mapOrdersToStations,
+  mapOrderToFormInitial, getStatusOptions,
 } from '@/features/auftraege/adapters/order.adapter';
 import { AuftraegeView } from '@/features/auftraege/views/AuftraegeView';
 import type { OrderCardProps, OrderFormData, ViewTab } from '@/features/auftraege/types/ui.types';
@@ -21,8 +21,6 @@ export function AuftraegePage() {
     onEdit: () => actions.openEditForm(order),
     onDelete: () => actions.confirmDelete(order),
   }));
-
-  const stations = mapOrdersToStations(state.filtered);
 
   const filter = {
     statusFilter: state.statusFilter,
@@ -50,19 +48,6 @@ export function AuftraegePage() {
     }
   };
 
-  // Hall view callbacks need the order object, so look it up by id
-  const findOrder = (id: string) => state.orders.find((o) => o.id === id);
-
-  const handleHallAdvance = (id: string) => actions.handleAdvance(id);
-  const handleHallEdit = (id: string) => {
-    const order = findOrder(id);
-    if (order) actions.openEditForm(order);
-  };
-  const handleHallDelete = (id: string) => {
-    const order = findOrder(id);
-    if (order) actions.confirmDelete(order);
-  };
-
   return (
     <AuftraegeView
       summary={summary}
@@ -71,16 +56,12 @@ export function AuftraegePage() {
       formState={formState}
       deleteTarget={deleteTarget}
       activeTab={activeTab}
-      stations={stations}
       onTabChange={setActiveTab}
       onOpenCreate={actions.openCreateForm}
       onCloseForm={actions.closeForm}
       onFormSave={handleFormSave}
       onDeleteConfirm={actions.handleDeleteConfirm}
       onDeleteCancel={actions.cancelDelete}
-      onHallAdvance={handleHallAdvance}
-      onHallEdit={handleHallEdit}
-      onHallDelete={handleHallDelete}
     />
   );
 }

@@ -3,7 +3,7 @@ import { Button, EmptyState, Modal, Tabs } from '@/ui';
 import type {
   OrderCardProps, OrderFilterBarProps, OrderSummary,
   DeleteTarget, OrderFormData, OrderFormInitial,
-  ViewTab, HallStationData,
+  ViewTab,
 } from '../types/ui.types';
 import { OrderFilterBar } from '../components/OrderFilterBar';
 import { OrderCard } from '../components/OrderCard';
@@ -27,24 +27,19 @@ interface AuftraegeViewProps {
   formState: FormState;
   deleteTarget: DeleteTarget | null;
   activeTab: ViewTab;
-  stations: HallStationData[];
   onTabChange: (tab: ViewTab) => void;
   onOpenCreate: () => void;
   onCloseForm: () => void;
   onFormSave: (data: OrderFormData) => void;
   onDeleteConfirm: () => void;
   onDeleteCancel: () => void;
-  onHallAdvance: (id: string) => void;
-  onHallEdit: (id: string) => void;
-  onHallDelete: (id: string) => void;
 }
 
 export function AuftraegeView({
   summary, cards, filter, formState, deleteTarget,
-  activeTab, stations,
+  activeTab,
   onTabChange, onOpenCreate, onCloseForm, onFormSave,
   onDeleteConfirm, onDeleteCancel,
-  onHallAdvance, onHallEdit, onHallDelete,
 }: AuftraegeViewProps) {
   return (
     <div>
@@ -95,14 +90,7 @@ export function AuftraegeView({
       )}
 
       {/* Halle View */}
-      {activeTab === 'halle' && (
-        <HallView
-          stations={stations}
-          onAdvance={onHallAdvance}
-          onEdit={onHallEdit}
-          onDelete={onHallDelete}
-        />
-      )}
+      {activeTab === 'halle' && <HallView />}
 
       {/* Create Form */}
       {formState.mode === 'create' && (

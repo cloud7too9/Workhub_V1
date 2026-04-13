@@ -1,15 +1,7 @@
 import { useState } from 'react';
 import { Toggle } from '@/ui';
 import { hallGrid, hallZones } from '@/data/hallConfig';
-import type { HallStationData } from '../types/ui.types';
 import { HallZone } from './HallZone';
-
-interface HallViewProps {
-  stations: HallStationData[];
-  onAdvance: (id: string) => void;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
-}
 
 function getGridOverlayStyle(columns: number, rows: number): React.CSSProperties {
   const colSize = `calc(100% / ${columns})`;
@@ -28,16 +20,8 @@ function getGridOverlayStyle(columns: number, rows: number): React.CSSProperties
   };
 }
 
-export function HallView({ stations, onAdvance, onEdit, onDelete }: HallViewProps) {
+export function HallView() {
   const [showGrid, setShowGrid] = useState(true);
-
-  // Group stations by zone
-  const stationsByZone = new Map<string, HallStationData[]>();
-  for (const station of stations) {
-    const list = stationsByZone.get(station.zoneId) ?? [];
-    list.push(station);
-    stationsByZone.set(station.zoneId, list);
-  }
 
   return (
     <div>
@@ -70,14 +54,7 @@ export function HallView({ stations, onAdvance, onEdit, onDelete }: HallViewProp
 
         {/* Zones */}
         {hallZones.map((zone) => (
-          <HallZone
-            key={zone.id}
-            zone={zone}
-            stations={stationsByZone.get(zone.id) ?? []}
-            onAdvance={onAdvance}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
+          <HallZone key={zone.id} zone={zone} />
         ))}
       </div>
     </div>

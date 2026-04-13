@@ -1,16 +1,10 @@
 import type { HallZoneConfig } from '@/data/hallConfig';
-import type { HallStationData } from '../types/ui.types';
-import { HallStation } from './HallStation';
 
 interface HallZoneProps {
   zone: HallZoneConfig;
-  stations: HallStationData[];
-  onAdvance: (id: string) => void;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
 }
 
-export function HallZone({ zone, stations, onAdvance, onEdit, onDelete }: HallZoneProps) {
+export function HallZone({ zone }: HallZoneProps) {
   return (
     <div style={{
       gridColumn: `${zone.column[0]} / ${zone.column[1] + 1}`,
@@ -21,7 +15,6 @@ export function HallZone({ zone, stations, onAdvance, onEdit, onDelete }: HallZo
       padding: '10px',
       display: 'flex',
       flexDirection: 'column',
-      gap: '8px',
       overflow: 'hidden',
       position: 'relative',
     }}>
@@ -35,19 +28,6 @@ export function HallZone({ zone, stations, onAdvance, onEdit, onDelete }: HallZo
       }}>
         {zone.label}
       </span>
-
-      {/* Stations within this zone */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, overflowY: 'auto' }}>
-        {stations.map((station) => (
-          <HallStation
-            key={station.id}
-            {...station}
-            onAdvance={onAdvance}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        ))}
-      </div>
     </div>
   );
 }
