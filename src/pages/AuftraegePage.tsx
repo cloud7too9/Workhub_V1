@@ -1,15 +1,17 @@
+import { useState } from 'react';
 import { useAuftraege } from '@/features/auftraege/hooks/useAuftraege';
 import {
   mapOrderToCard, mapOrdersToSummary, mapOrderToDeleteTarget,
   mapOrderToFormInitial, getStatusOptions,
 } from '@/features/auftraege/adapters/order.adapter';
 import { AuftraegeView } from '@/features/auftraege/views/AuftraegeView';
-import type { OrderCardProps, OrderFormData } from '@/features/auftraege/types/ui.types';
+import type { OrderCardProps, OrderFormData, ViewTab } from '@/features/auftraege/types/ui.types';
 
 const statusOptions = getStatusOptions();
 
 export function AuftraegePage() {
   const { state, actions } = useAuftraege();
+  const [activeTab, setActiveTab] = useState<ViewTab>('liste');
 
   const summary = mapOrdersToSummary(state.orders);
 
@@ -53,6 +55,8 @@ export function AuftraegePage() {
       filter={filter}
       formState={formState}
       deleteTarget={deleteTarget}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
       onOpenCreate={actions.openCreateForm}
       onCloseForm={actions.closeForm}
       onFormSave={handleFormSave}

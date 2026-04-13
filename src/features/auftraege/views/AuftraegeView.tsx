@@ -1,12 +1,19 @@
 import { Plus } from 'lucide-react';
-import { Button, EmptyState, Modal } from '@/ui';
+import { Button, EmptyState, Modal, Tabs } from '@/ui';
 import type {
   OrderCardProps, OrderFilterBarProps, OrderSummary,
   DeleteTarget, OrderFormData, OrderFormInitial,
+  ViewTab,
 } from '../types/ui.types';
 import { OrderFilterBar } from '../components/OrderFilterBar';
 import { OrderCard } from '../components/OrderCard';
 import { OrderForm } from '../components/OrderForm';
+import { HallView } from '../components/HallView';
+
+const viewTabs = [
+  { id: 'liste', label: 'Liste' },
+  { id: 'halle', label: 'Hallenansicht' },
+];
 
 type FormState =
   | { mode: 'closed' }
@@ -19,6 +26,8 @@ interface AuftraegeViewProps {
   filter: OrderFilterBarProps;
   formState: FormState;
   deleteTarget: DeleteTarget | null;
+  activeTab: ViewTab;
+  onTabChange: (tab: ViewTab) => void;
   onOpenCreate: () => void;
   onCloseForm: () => void;
   onFormSave: (data: OrderFormData) => void;
@@ -28,7 +37,8 @@ interface AuftraegeViewProps {
 
 export function AuftraegeView({
   summary, cards, filter, formState, deleteTarget,
-  onOpenCreate, onCloseForm, onFormSave,
+  activeTab,
+  onTabChange, onOpenCreate, onCloseForm, onFormSave,
   onDeleteConfirm, onDeleteCancel,
 }: AuftraegeViewProps) {
   return (
@@ -51,24 +61,35 @@ export function AuftraegeView({
         </Button>
       </div>
 
-      {/* Filters */}
+      {/* View Tabs */}
       <div style={{ marginBottom: 'var(--sp-md)' }}>
-        <OrderFilterBar {...filter} />
+        <Tabs items={viewTabs} active={activeTab} onChange={(id) => onTabChange(id as ViewTab)} />
       </div>
 
-      {/* Order List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-sm)' }}>
-        {cards.map((card) => (
-          <OrderCard key={card.id} {...card} />
-        ))}
-      </div>
+      {/* Liste View */}
+      {activeTab === 'liste' && (
+        <>
+          <div style={{ marginBottom: 'var(--sp-md)' }}>
+            <OrderFilterBar {...filter} />
+          </div>
 
-      {cards.length === 0 && summary.total > 0 && (
-        <EmptyState title="Keine Aufträge für diesen Filter" description="Versuch einen anderen Filter oder Suchbegriff." />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-sm)' }}>
+            {cards.map((card) => (
+              <OrderCard key={card.id} {...card} />
+            ))}
+          </div>
+
+          {cards.length === 0 && summary.total > 0 && (
+            <EmptyState title="Keine Aufträge für diesen Filter" description="Versuch einen anderen Filter oder Suchbegriff." />
+          )}
+          {summary.total === 0 && (
+            <EmptyState title="Noch keine Aufträge" description='Klicke oben auf "+ Auftrag" um loszulegen' />
+          )}
+        </>
       )}
-      {summary.total === 0 && (
-        <EmptyState title="Noch keine Aufträge" description='Klicke oben auf "+ Auftrag" um loszulegen' />
-      )}
+
+      {/* Halle View */}
+      {activeTab === 'halle' && <HallView />}
 
       {/* Create Form */}
       {formState.mode === 'create' && (
