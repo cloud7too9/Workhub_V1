@@ -2,6 +2,7 @@
 
 export type StatusFilterValue = 'all' | 'open' | 'sawn' | 'machining_done' | 'ready_for_shipping';
 export type SortModeValue = 'deliveryDateAsc' | 'deliveryDateDesc' | 'updatedAtDesc';
+export type ViewTab = 'liste' | 'halle';
 
 // ── Card: Daten getrennt von Callbacks ──
 
@@ -82,4 +83,27 @@ export interface OrderSummary {
 export interface DeleteTarget {
   id: string;
   label: string;
+}
+
+// ── Hall View ──
+
+export interface HallOrderChipData {
+  id: string;
+  title: string;
+  subtitle: string;
+  deliveryDate: string;
+  urgencyBadge?: { label: string };
+  statusLabel: string;
+  statusColor: string;
+  advanceAction?: { label: string; color: string };
+  details: { label: string; value: string }[];
+}
+
+export interface HallStationData {
+  id: string;
+  label: string;
+  color: string;
+  zoneId: string;
+  count: number;
+  orders: HallOrderChipData[];
 }
