@@ -61,11 +61,6 @@ export function AuftraegeView({
         </Button>
       </div>
 
-      {/* Filters (shared across views) */}
-      <div style={{ marginBottom: 'var(--sp-md)' }}>
-        <OrderFilterBar {...filter} />
-      </div>
-
       {/* View Tabs */}
       <div style={{ marginBottom: 'var(--sp-md)' }}>
         <Tabs items={viewTabs} active={activeTab} onChange={(id) => onTabChange(id as ViewTab)} />
@@ -74,6 +69,10 @@ export function AuftraegeView({
       {/* Liste View */}
       {activeTab === 'liste' && (
         <>
+          <div style={{ marginBottom: 'var(--sp-md)' }}>
+            <OrderFilterBar {...filter} />
+          </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-sm)' }}>
             {cards.map((card) => (
               <OrderCard key={card.id} {...card} />

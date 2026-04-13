@@ -12,19 +12,22 @@ export function HallZone({ zone }: HallZoneProps) {
       background: zone.color,
       borderRadius: 'var(--radius-md)',
       border: '1px solid var(--border-subtle)',
-      padding: '10px',
+      padding: '8px',
       display: 'flex',
-      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
       overflow: 'hidden',
       position: 'relative',
     }}>
-      {/* Zone Label */}
+      {/* Zone Label (centered) */}
       <span style={{
-        fontSize: '10px',
+        fontSize: '13px',
         fontWeight: 700,
         color: 'var(--text-3)',
         textTransform: 'uppercase',
-        letterSpacing: '0.06em',
+        letterSpacing: '0.08em',
+        opacity: 0.6,
+        userSelect: 'none',
       }}>
         {zone.label}
       </span>
