@@ -7,6 +7,7 @@ import { HandbuchPage } from './pages/HandbuchPage';
 import { RechnerPage } from './pages/RechnerPage';
 import { AuftraegePage } from './pages/AuftraegePage';
 import { EinstellungenPage } from './pages/EinstellungenPage';
+import { Lagerbestand } from './pages/Lagerbestand';
 
 export function App() {
   return (
@@ -16,6 +17,7 @@ export function App() {
           <Route path="/" element={<HandbuchPage />} />
           <Route path="/rechner" element={<RechnerPage />} />
           <Route path="/auftraege" element={<AuftraegePage />} />
+          <Route path="/lagerbestand/*" element={<Lagerbestand />} />
           <Route path="/einstellungen" element={<EinstellungenPage />} />
         </Routes>
       </AppLayout>
