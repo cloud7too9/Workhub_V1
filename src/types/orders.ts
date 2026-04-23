@@ -1,3 +1,5 @@
+import type { ArbeitsgangPhase } from './workpieces';
+
 export type OrderStatus =
   | 'open'
   | 'sawn'
@@ -10,16 +12,31 @@ export type OrderStep =
   | 'packing'
   | null;
 
+export interface AuftragArbeitsgang {
+  id: string;
+  name: string;
+  phase: ArbeitsgangPhase;
+  sequence: number;
+  description?: string;
+  done: boolean;
+  bearbeiterId?: string;
+  completedAt?: string;
+}
+
 export interface Order {
   id: string;
+  workpieceId: string;
   article: string;
   orderNumber: string;
+  orderDate: string;
   customer: string;
-  material: string;
-  dimensions: string;
   quantity: number;
+  processedQuantity: number;
   deliveryDate: string;
+  completionDate?: string;
   notes: string;
+  arbeitsgaenge: AuftragArbeitsgang[];
+  bearbeiterId?: string;
   status: OrderStatus;
   currentStep: OrderStep;
   createdAt: string;
