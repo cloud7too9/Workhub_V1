@@ -10,7 +10,7 @@ export function EinstellungenPage() {
       changelog={state.changelog}
       settings={state.settings}
       showReset={state.showReset}
-      onSectionChange={(s) => actions.setActiveSection(s as 'changelog' | 'notifications')}
+      onSectionChange={(s) => actions.setActiveSection(s as 'changelog' | 'notifications' | 'bearbeiter')}
       onUndo={actions.handleUndo}
       onOpenReset={actions.openReset}
       onCancelReset={actions.cancelReset}

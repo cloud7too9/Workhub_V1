@@ -1,9 +1,18 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { Order, OrderHistoryEntry } from '@/types/orders';
+import type { Werkstueck } from '@/types/workpieces';
+import type { Material } from '@/types/materials';
+import type { Bearbeiter } from '@/types/bearbeiter';
 import {
   loadOrders, saveOrders, loadOrderHistory, saveOrderHistory,
   createOrder, updateOrder, deleteOrder, advanceOrderStatus,
+  toggleArbeitsgangDone,
+  migrateLegacyOrders, isMigrated, markMigrated,
+  type CreateOrderInput,
 } from '@/stores/orderStorage';
+import { loadWorkpieces, saveWorkpieces } from '@/stores/workpieceStorage';
+import { loadBearbeiter } from '@/stores/bearbeiterStorage';
+import { initMaterials } from '@/stores/materialStorage';
 import { selectFilteredOrders } from '../selectors/order.selectors';
 import type { StatusFilterValue, SortModeValue } from '../types/ui.types';
 
@@ -18,6 +27,9 @@ type DeleteState =
 
 export function useAuftraege() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [workpieces, setWorkpieces] = useState<Werkstueck[]>([]);
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [bearbeiter, setBearbeiter] = useState<Bearbeiter[]>([]);
   const [history, setHistory] = useState<OrderHistoryEntry[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusFilterValue>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,32 +38,50 @@ export function useAuftraege() {
   const [deleteState, setDeleteState] = useState<DeleteState>({ mode: 'closed' });
 
   useEffect(() => {
-    setOrders(loadOrders());
+    const rawOrders = loadOrders() as unknown[];
+    let loadedWp = loadWorkpieces();
+    let loadedOrders: Order[];
+
+    if (!isMigrated()) {
+      const result = migrateLegacyOrders(rawOrders, loadedWp);
+      loadedOrders = result.orders;
+      loadedWp = result.workpieces;
+      saveOrders(loadedOrders);
+      saveWorkpieces(loadedWp);
+      markMigrated();
+    } else {
+      loadedOrders = rawOrders as Order[];
+    }
+
+    setOrders(loadedOrders);
+    setWorkpieces(loadedWp);
     setHistory(loadOrderHistory());
+    setBearbeiter(loadBearbeiter());
+    initMaterials().then(setMaterials);
   }, []);
 
   useEffect(() => { saveOrders(orders); }, [orders]);
   useEffect(() => { saveOrderHistory(history); }, [history]);
 
   const filtered = useMemo(
-    () => selectFilteredOrders(orders, { statusFilter, searchTerm, sortMode }),
-    [orders, statusFilter, searchTerm, sortMode],
+    () => selectFilteredOrders(orders, workpieces, { statusFilter, searchTerm, sortMode }),
+    [orders, workpieces, statusFilter, searchTerm, sortMode],
   );
 
   const addHistory = (entry: OrderHistoryEntry) => {
     setHistory((prev) => [entry, ...prev]);
   };
 
-  const handleCreate = (data: Parameters<typeof createOrder>[1]) => {
-    const result = createOrder(orders, data);
+  const handleCreate = (data: CreateOrderInput) => {
+    const result = createOrder(orders, workpieces, data);
     setOrders(result.orders);
     addHistory(result.historyEntry);
     setFormState({ mode: 'closed' });
   };
 
-  const handleUpdate = (data: Parameters<typeof createOrder>[1]) => {
+  const handleUpdate = (data: CreateOrderInput) => {
     if (formState.mode !== 'edit') return;
-    const result = updateOrder(orders, formState.order.id, data);
+    const result = updateOrder(orders, workpieces, formState.order.id, data);
     if (result) {
       setOrders(result.orders);
       addHistory(result.historyEntry);
@@ -77,9 +107,24 @@ export function useAuftraege() {
     setDeleteState({ mode: 'closed' });
   };
 
+  const handleToggleArbeitsgang = (orderId: string, arbeitsgangId: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    const result = toggleArbeitsgangDone(orders, orderId, arbeitsgangId, order?.bearbeiterId);
+    if (result) {
+      setOrders(result.orders);
+      addHistory(result.historyEntry);
+    }
+  };
+
+  const refreshWorkpieces = () => setWorkpieces(loadWorkpieces());
+  const refreshBearbeiter = () => setBearbeiter(loadBearbeiter());
+
   return {
     state: {
       orders,
+      workpieces,
+      materials,
+      bearbeiter,
       filtered,
       statusFilter,
       searchTerm,
@@ -91,8 +136,16 @@ export function useAuftraege() {
       setStatusFilter,
       setSearchTerm,
       setSortMode,
-      openCreateForm: () => setFormState({ mode: 'create' }),
-      openEditForm: (order: Order) => setFormState({ mode: 'edit', order }),
+      openCreateForm: () => {
+        refreshWorkpieces();
+        refreshBearbeiter();
+        setFormState({ mode: 'create' });
+      },
+      openEditForm: (order: Order) => {
+        refreshWorkpieces();
+        refreshBearbeiter();
+        setFormState({ mode: 'edit', order });
+      },
       closeForm: () => setFormState({ mode: 'closed' }),
       confirmDelete: (order: Order) => setDeleteState({ mode: 'confirm', order }),
       cancelDelete: () => setDeleteState({ mode: 'closed' }),
@@ -100,6 +153,9 @@ export function useAuftraege() {
       handleUpdate,
       handleAdvance,
       handleDeleteConfirm,
+      handleToggleArbeitsgang,
+      refreshWorkpieces,
+      refreshBearbeiter,
     },
   };
 }

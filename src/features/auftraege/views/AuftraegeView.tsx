@@ -1,5 +1,10 @@
 import { Plus } from 'lucide-react';
 import { Button, EmptyState, Modal, Tabs } from '@/ui';
+import type { Werkstueck } from '@/types/workpieces';
+import type { Material } from '@/types/materials';
+import type { Bearbeiter } from '@/types/bearbeiter';
+import { WerkstueckForm } from '@/features/werkstuecke/components/WerkstueckForm';
+import type { WerkstueckFormData } from '@/features/werkstuecke/types/ui.types';
 import type {
   OrderCardProps, OrderFilterBarProps, OrderSummary,
   DeleteTarget, OrderFormData, OrderFormInitial,
@@ -27,23 +32,30 @@ interface AuftraegeViewProps {
   formState: FormState;
   deleteTarget: DeleteTarget | null;
   activeTab: ViewTab;
+  workpieces: Werkstueck[];
+  materials: Material[];
+  bearbeiter: Bearbeiter[];
+  workpieceFormOpen: boolean;
   onTabChange: (tab: ViewTab) => void;
   onOpenCreate: () => void;
   onCloseForm: () => void;
   onFormSave: (data: OrderFormData) => void;
   onDeleteConfirm: () => void;
   onDeleteCancel: () => void;
+  onOpenWorkpieceForm: () => void;
+  onCloseWorkpieceForm: () => void;
+  onWorkpieceCreate: (data: WerkstueckFormData) => void;
 }
 
 export function AuftraegeView({
   summary, cards, filter, formState, deleteTarget,
-  activeTab,
+  activeTab, workpieces, materials, bearbeiter, workpieceFormOpen,
   onTabChange, onOpenCreate, onCloseForm, onFormSave,
   onDeleteConfirm, onDeleteCancel,
+  onOpenWorkpieceForm, onCloseWorkpieceForm, onWorkpieceCreate,
 }: AuftraegeViewProps) {
   return (
     <div>
-      {/* Header */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         marginBottom: 'var(--sp-md)',
@@ -61,12 +73,10 @@ export function AuftraegeView({
         </Button>
       </div>
 
-      {/* View Tabs */}
       <div style={{ marginBottom: 'var(--sp-md)' }}>
         <Tabs items={viewTabs} active={activeTab} onChange={(id) => onTabChange(id as ViewTab)} />
       </div>
 
-      {/* Liste View */}
       {activeTab === 'liste' && (
         <>
           <div style={{ marginBottom: 'var(--sp-md)' }}>
@@ -88,20 +98,42 @@ export function AuftraegeView({
         </>
       )}
 
-      {/* Halle View */}
       {activeTab === 'halle' && <HallView />}
 
-      {/* Create Form */}
       {formState.mode === 'create' && (
-        <OrderForm mode="create" onSave={onFormSave} onCancel={onCloseForm} />
+        <OrderForm
+          mode="create"
+          workpieces={workpieces}
+          materials={materials}
+          bearbeiter={bearbeiter}
+          onSave={onFormSave}
+          onCancel={onCloseForm}
+          onCreateWorkpiece={onOpenWorkpieceForm}
+        />
       )}
 
-      {/* Edit Form */}
       {formState.mode === 'edit' && (
-        <OrderForm mode="edit" initial={formState.initial} onSave={onFormSave} onCancel={onCloseForm} />
+        <OrderForm
+          mode="edit"
+          initial={formState.initial}
+          workpieces={workpieces}
+          materials={materials}
+          bearbeiter={bearbeiter}
+          onSave={onFormSave}
+          onCancel={onCloseForm}
+          onCreateWorkpiece={onOpenWorkpieceForm}
+        />
       )}
 
-      {/* Delete Confirm */}
+      {workpieceFormOpen && (
+        <WerkstueckForm
+          mode="create"
+          materials={materials}
+          onSave={onWorkpieceCreate}
+          onCancel={onCloseWorkpieceForm}
+        />
+      )}
+
       {deleteTarget && (
         <Modal open onClose={onDeleteCancel} title="Auftrag löschen" actions={
           <>

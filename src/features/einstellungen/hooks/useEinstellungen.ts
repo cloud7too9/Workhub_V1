@@ -8,7 +8,7 @@ import {
 import { loadSettings, saveSettings } from '@/stores/settingsStorage';
 import type { AppSettings } from '@/stores/settingsStorage';
 
-type Section = 'changelog' | 'notifications';
+type Section = 'changelog' | 'notifications' | 'bearbeiter';
 
 export function useEinstellungen() {
   const [activeSection, setActiveSection] = useState<Section>('changelog');

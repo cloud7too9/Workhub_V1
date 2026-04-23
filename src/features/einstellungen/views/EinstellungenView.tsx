@@ -3,12 +3,14 @@ import type { AppSettings } from '@/stores/settingsStorage';
 import { Tabs, Button, Modal } from '@/ui';
 import { ChangelogList } from '../components/ChangelogList';
 import { NotificationToggles } from '../components/NotificationToggles';
+import { BearbeiterVerwaltung } from '../components/BearbeiterVerwaltung';
 
-type Section = 'changelog' | 'notifications';
+type Section = 'changelog' | 'notifications' | 'bearbeiter';
 
 const tabItems = [
   { id: 'changelog', label: 'Änderungen' },
   { id: 'notifications', label: 'Benachrichtigungen' },
+  { id: 'bearbeiter', label: 'Bearbeiter' },
 ];
 
 interface EinstellungenViewProps {
@@ -55,6 +57,9 @@ export function EinstellungenView({
           onChange={onNotificationsChange}
         />
       )}
+
+      {/* Bearbeiter */}
+      {activeSection === 'bearbeiter' && <BearbeiterVerwaltung />}
 
       {/* Reset Confirm */}
       {showReset && (

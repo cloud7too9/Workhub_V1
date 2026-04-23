@@ -1,7 +1,9 @@
 import type { Order, OrderStatusFilter, OrderSortMode } from '@/types/orders';
+import type { Werkstueck } from '@/types/workpieces';
 
 export function selectFilteredOrders(
   orders: Order[],
+  workpieces: Werkstueck[],
   options: {
     statusFilter: OrderStatusFilter;
     searchTerm: string;
@@ -16,11 +18,17 @@ export function selectFilteredOrders(
 
   const term = options.searchTerm.trim().toLowerCase();
   if (term) {
-    result = result.filter((o) =>
-      [o.article, o.customer, o.orderNumber, o.material].some((f) =>
-        f?.toLowerCase().includes(term),
-      ),
-    );
+    result = result.filter((o) => {
+      const wp = workpieces.find((w) => w.id === o.workpieceId);
+      return [
+        o.article,
+        o.customer,
+        o.orderNumber,
+        wp?.bezeichnung,
+        wp?.fertigmass,
+        wp?.saegemass,
+      ].some((f) => f?.toLowerCase().includes(term));
+    });
   }
 
   const sorted = [...result];

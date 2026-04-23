@@ -1,12 +1,20 @@
 import { useState } from 'react';
+import { Plus } from 'lucide-react';
+import type { Werkstueck } from '@/types/workpieces';
+import type { Material } from '@/types/materials';
+import type { Bearbeiter } from '@/types/bearbeiter';
+import { rohmaterialTypLabels } from '@/types/workpieces';
 import type { OrderFormData, OrderFormInitial } from '../types/ui.types';
-
 
 interface OrderFormProps {
   mode: 'create' | 'edit';
   initial?: OrderFormInitial;
+  workpieces: Werkstueck[];
+  materials: Material[];
+  bearbeiter: Bearbeiter[];
   onSave: (data: OrderFormData) => void;
   onCancel: () => void;
+  onCreateWorkpiece: () => void;
 }
 
 function Field({
@@ -51,36 +59,58 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
 };
 
-export function OrderForm({ mode, initial, onSave, onCancel }: OrderFormProps) {
+function formatWorkpieceOption(wp: Werkstueck, materials: Material[]): string {
+  const material = materials.find((m) => m.id === wp.materialId)?.name;
+  const parts = [wp.bezeichnung, material, rohmaterialTypLabels[wp.rohmaterialTyp], wp.fertigmass]
+    .filter(Boolean);
+  return parts.join(' · ');
+}
+
+export function OrderForm({
+  mode,
+  initial,
+  workpieces,
+  materials,
+  bearbeiter,
+  onSave,
+  onCancel,
+  onCreateWorkpiece,
+}: OrderFormProps) {
+  const [workpieceId, setWorkpieceId] = useState(initial?.workpieceId ?? '');
   const [article, setArticle] = useState(initial?.article ?? '');
-  const [material, setMaterial] = useState(initial?.material ?? '');
-  const [dimensions, setDimensions] = useState(initial?.dimensions ?? '');
   const [quantity, setQuantity] = useState(String(initial?.quantity ?? ''));
+  const [processedQuantity, setProcessedQuantity] = useState(
+    String(initial?.processedQuantity ?? 0),
+  );
   const [deliveryDate, setDeliveryDate] = useState(initial?.deliveryDate ?? '');
+  const [orderDate, setOrderDate] = useState(
+    initial?.orderDate ?? new Date().toISOString().slice(0, 10),
+  );
   const [orderNumber, setOrderNumber] = useState(initial?.orderNumber ?? '');
   const [customer, setCustomer] = useState(initial?.customer ?? '');
   const [notes, setNotes] = useState(initial?.notes ?? '');
+  const [bearbeiterId, setBearbeiterId] = useState(initial?.bearbeiterId ?? '');
 
   const canSave =
-    article.trim() &&
-    material.trim() &&
-    dimensions.trim() &&
-    Number(quantity) > 0 &&
-    deliveryDate;
+    workpieceId && article.trim() && Number(quantity) > 0 && deliveryDate;
 
   const handleSave = () => {
     if (!canSave) return;
     onSave({
+      workpieceId,
       article: article.trim(),
-      material: material.trim(),
-      dimensions: dimensions.trim(),
       quantity: Number(quantity),
+      processedQuantity: Number(processedQuantity) || 0,
       deliveryDate,
+      orderDate,
       orderNumber: orderNumber.trim(),
       customer: customer.trim(),
       notes: notes.trim(),
+      bearbeiterId,
     });
   };
+
+  const activeBearbeiter = bearbeiter.filter((b) => b.active);
 
   return (
     <div
@@ -107,8 +137,8 @@ export function OrderForm({ mode, initial, onSave, onCancel }: OrderFormProps) {
         style={{
           position: 'relative',
           width: '100%',
-          maxWidth: 480,
-          maxHeight: '90vh',
+          maxWidth: 520,
+          maxHeight: '92vh',
           overflowY: 'auto',
           border: '1px solid var(--border)',
           background: 'var(--surface)',
@@ -117,7 +147,6 @@ export function OrderForm({ mode, initial, onSave, onCancel }: OrderFormProps) {
           animation: 'fadeSlideUp 0.2s ease',
         }}
       >
-        {/* Header */}
         <div
           style={{
             display: 'flex',
@@ -149,38 +178,124 @@ export function OrderForm({ mode, initial, onSave, onCancel }: OrderFormProps) {
         </div>
 
         <div style={{ display: 'grid', gap: 12 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <Field label="Artikel" required>
-              <input style={inputStyle} value={article} onChange={(e) => setArticle(e.target.value)} placeholder="z.B. HVS 40" />
-            </Field>
-            <Field label="Material" required>
-              <input style={inputStyle} value={material} onChange={(e) => setMaterial(e.target.value)} placeholder="z.B. 1.4301" />
-            </Field>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <Field label="Maße" required>
-              <input style={inputStyle} value={dimensions} onChange={(e) => setDimensions(e.target.value)} placeholder="z.B. Ø50x80" />
-            </Field>
-            <Field label="Menge" required>
-              <input style={inputStyle} inputMode="numeric" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="z.B. 100" />
-            </Field>
-          </div>
-
-          <Field label="Lieferdatum" required>
-            <input style={inputStyle} type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} />
+          <Field label="Werkstück" required>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <select
+                style={{ ...inputStyle, cursor: 'pointer', flex: 1 }}
+                value={workpieceId}
+                onChange={(e) => setWorkpieceId(e.target.value)}
+              >
+                <option value="">— Werkstück wählen —</option>
+                {workpieces.map((wp) => (
+                  <option key={wp.id} value={wp.id}>
+                    {formatWorkpieceOption(wp, materials)}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={onCreateWorkpiece}
+                aria-label="Neues Werkstück anlegen"
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  border: '1px solid var(--border)',
+                  background: 'var(--surface-alt)',
+                  color: 'var(--text-2)',
+                  cursor: 'pointer',
+                  display: 'grid',
+                  placeItems: 'center',
+                }}
+              >
+                <Plus size={16} />
+              </button>
+            </div>
           </Field>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <Field label="Bestellnummer">
-              <input style={inputStyle} value={orderNumber} onChange={(e) => setOrderNumber(e.target.value)} placeholder="Optional" />
+          <Field label="Artikel / Bezeichnung (Kunde)" required>
+            <input
+              style={inputStyle}
+              value={article}
+              onChange={(e) => setArticle(e.target.value)}
+              placeholder="Wie der Kunde es nennt"
+            />
+          </Field>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+            <Field label="Bestellt" required>
+              <input
+                style={inputStyle}
+                inputMode="numeric"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                placeholder="z.B. 100"
+              />
             </Field>
-            <Field label="Kunde">
-              <input style={inputStyle} value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="Optional" />
+            <Field label="Bearbeitet">
+              <input
+                style={inputStyle}
+                inputMode="numeric"
+                value={processedQuantity}
+                onChange={(e) => setProcessedQuantity(e.target.value)}
+                placeholder="0"
+              />
+            </Field>
+            <Field label="Liefertermin" required>
+              <input
+                style={inputStyle}
+                type="date"
+                value={deliveryDate}
+                onChange={(e) => setDeliveryDate(e.target.value)}
+              />
             </Field>
           </div>
 
-          <Field label="Notizen">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <Field label="Bestell-Nr.">
+              <input
+                style={inputStyle}
+                value={orderNumber}
+                onChange={(e) => setOrderNumber(e.target.value)}
+                placeholder="Optional"
+              />
+            </Field>
+            <Field label="Bestelldatum">
+              <input
+                style={inputStyle}
+                type="date"
+                value={orderDate}
+                onChange={(e) => setOrderDate(e.target.value)}
+              />
+            </Field>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <Field label="Kunde">
+              <input
+                style={inputStyle}
+                value={customer}
+                onChange={(e) => setCustomer(e.target.value)}
+                placeholder="Optional"
+              />
+            </Field>
+            <Field label="Bearbeiter">
+              <select
+                style={{ ...inputStyle, cursor: 'pointer' }}
+                value={bearbeiterId}
+                onChange={(e) => setBearbeiterId(e.target.value)}
+              >
+                <option value="">— keiner —</option>
+                {activeBearbeiter.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
+          <Field label="Zusatzinformation">
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -196,15 +311,20 @@ export function OrderForm({ mode, initial, onSave, onCancel }: OrderFormProps) {
           </Field>
         </div>
 
-        {/* Actions */}
         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
           <button
             onClick={onCancel}
             style={{
-              flex: 1, height: 48, borderRadius: 12,
-              border: '1px solid var(--border)', background: 'transparent',
-              color: 'var(--text-3)', fontSize: 14, fontWeight: 600,
-              cursor: 'pointer', fontFamily: 'var(--font-sans)',
+              flex: 1,
+              height: 48,
+              borderRadius: 12,
+              border: '1px solid var(--border)',
+              background: 'transparent',
+              color: 'var(--text-3)',
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'var(--font-sans)',
             }}
           >
             Abbrechen
@@ -213,10 +333,15 @@ export function OrderForm({ mode, initial, onSave, onCancel }: OrderFormProps) {
             onClick={handleSave}
             disabled={!canSave}
             style={{
-              flex: 2, height: 48, borderRadius: 12, border: 'none',
+              flex: 2,
+              height: 48,
+              borderRadius: 12,
+              border: 'none',
               background: canSave ? 'var(--accent)' : 'var(--border)',
               color: canSave ? '#0b0d10' : 'var(--text-3)',
-              fontSize: 14, fontWeight: 700, fontFamily: 'var(--font-sans)',
+              fontSize: 14,
+              fontWeight: 700,
+              fontFamily: 'var(--font-sans)',
               cursor: canSave ? 'pointer' : 'default',
             }}
           >

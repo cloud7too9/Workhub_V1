@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { BookOpen, Calculator, ClipboardList, Settings } from 'lucide-react';
+import { BookOpen, Calculator, ClipboardList, Package, Settings } from 'lucide-react';
 
 export interface RouteItem {
   id: string;
@@ -13,6 +13,7 @@ export const routes: RouteItem[] = [
   { id: 'handbuch', path: '/', label: 'Handbuch', icon: BookOpen, subtitle: 'Werkstoffe' },
   { id: 'rechner', path: '/rechner', label: 'Rechner', icon: Calculator, subtitle: 'Stückzahl + Rest' },
   { id: 'auftraege', path: '/auftraege', label: 'Aufträge', icon: ClipboardList, subtitle: 'Verwaltung' },
+  { id: 'werkstuecke', path: '/werkstuecke', label: 'Werkstücke', icon: Package, subtitle: 'Stammdaten' },
   { id: 'einstellungen', path: '/einstellungen', label: 'Einstellungen', icon: Settings },
 ];
 
